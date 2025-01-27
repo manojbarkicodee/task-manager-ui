@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   AppBar,
   Toolbar,
@@ -24,6 +24,11 @@ import AssignmentIcon from "@mui/icons-material/Assignment";
 import ViewListIcon from '@mui/icons-material/ViewList';
 import GridViewIcon from '@mui/icons-material/GridView';
 import Divider from '@mui/material/Divider';
+// import { useDispatch } from "react-redux";
+import { AppDispatch, RootState } from "../store/store";
+import { useSelector } from "react-redux";
+import { fetchTasks } from "../store/taskSlice";
+import { useDispatch } from "react-redux";
 
 interface Task {
   id: string;
@@ -57,7 +62,17 @@ const initialTasks: Task[] = [
 const TaskManager: React.FC = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
+  const dispatch = useDispatch<AppDispatch>();
+  const tasks = useSelector((state: RootState) => state.tasks.tasks);
 
+  useEffect(() => {
+    dispatch(fetchTasks());
+  }, [dispatch]);
+
+
+  useEffect(()=>{
+  console.log("tasks=====>",tasks)
+  },[tasks])
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
   };
