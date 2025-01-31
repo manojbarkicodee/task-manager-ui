@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { act, useEffect, useState } from "react";
 import {
   AppBar,
   Toolbar,
@@ -12,80 +12,220 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
+  Paper,
+  Checkbox,
+  IconButton,
+  TextField,
+  InputAdornment,
 } from "@mui/material";
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-// import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-// import DatePicker from 'react-datepicker';
+import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+
 import "react-datepicker/dist/react-datepicker.css";
-// import '@fontsource/roboto';
+import DatePicker from "react-datepicker";
 import LogoutIcon from "@mui/icons-material/Logout";
 import AssignmentIcon from "@mui/icons-material/Assignment";
-import ViewListIcon from '@mui/icons-material/ViewList';
-import GridViewIcon from '@mui/icons-material/GridView';
-import Divider from '@mui/material/Divider';
-// import { useDispatch } from "react-redux";
+import ViewListIcon from "@mui/icons-material/ViewList";
+import GridViewIcon from "@mui/icons-material/GridView";
+import Divider from "@mui/material/Divider";
 import { AppDispatch, RootState } from "../store/store";
 import { useSelector } from "react-redux";
-import { fetchTasks } from "../store/taskSlice";
+import {
+  deleteTask,
+  fetchTasks,
+  filterTasksByStatus,
+  searchTasks,
+  Task,
+  updateTask,
+} from "../store/taskSlice";
 import { useDispatch } from "react-redux";
-
-interface Task {
-  id: string;
-  title: string;
-  status: string;
-  dueDate: Date;
-}
-
-const initialTasks: Task[] = [
-  {
-    id: "1",
-    title: "Interview with Design Team",
-    status: "todo",
-    dueDate: new Date(),
-  },
-  { id: "2", title: "Team Meeting", status: "todo", dueDate: new Date() },
-  {
-    id: "3",
-    title: "Design a Dashboard page",
-    status: "inProgress",
-    dueDate: new Date(),
-  },
-  {
-    id: "4",
-    title: "Submit Project Proposal",
-    status: "completed",
-    dueDate: new Date(),
-  },
-];
-
+import CreateTaskModal from "../components/CreateTaskModal";
+import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
+import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import ClearIcon from "@mui/icons-material/Clear";
+import { logout } from "../store/authSlice";
+import { Navigate } from "react-router-dom";
+import BorderColorIcon from "@mui/icons-material/BorderColor";
+import DeleteIcon from "@mui/icons-material/Delete";
+import SearchIcon from "@mui/icons-material/Search";
+import NoResultsFound from "../components/NoResultsFound";
+import BottomPopup from "../components/BottomPopup";
 const TaskManager: React.FC = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [actionIconsAnchorEl, setActionIconsAnchorEl] =
+    useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
+  const [actionOpen, setActionOpen] = useState(false);
   const dispatch = useDispatch<AppDispatch>();
-  const tasks = useSelector((state: RootState) => state.tasks.tasks);
-
+  const { tasks, todoList, progressList, completedList } = useSelector(
+    (state: RootState) => state.tasks
+  );
+  const [createTaskModalOpen, setCreateTaskModalOpen] = React.useState(false);
+  const userData = JSON.parse(localStorage.getItem("userData") || "{}");
+  const [selectedCategory, setSelectedCategory] = useState(""); // Track selected category
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [activeTask, setActiveTask] = useState<Task>({
+    title: "",
+    description: "",
+    category: "WORK",
+    dueDate: "",
+    status: "",
+  });
+  const [actionType, setActionType] = useState("");
+  const [search, setSearch] = useState("");
+  const [displayTasks, setDisplaytasks] = useState<any>({
+    todo: todoList,
+    progress: progressList,
+    completed: completedList,
+  });
+  const handleClickOpen = () => {
+    setCreateTaskModalOpen(true);
+    setActionType("newTask");
+  };
   useEffect(() => {
-    dispatch(fetchTasks());
+    console.log(userData);
+    dispatch(fetchTasks({ userId: userData.uid }));
   }, [dispatch]);
 
+  useEffect(() => {
+    dispatch(filterTasksByStatus("TO_DO"));
+    dispatch(filterTasksByStatus("IN_PROGRESS"));
+    dispatch(filterTasksByStatus("COMPLETED"));
+  }, [tasks]);
 
-  useEffect(()=>{
-  console.log("tasks=====>",tasks)
-  },[tasks])
+  useEffect(() => {
+    setDisplaytasks({
+      todo: todoList,
+      progress: progressList,
+      completed: completedList,
+    });
+    console.log("tasks=====>", progressList, todoList, completedList);
+  }, [todoList]);
+
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    console.log("event=======>", event.currentTarget);
     setAnchorEl(event.currentTarget);
   };
 
-  const handleClose = () => {
+  const onActionsCLick = (
+    event: React.MouseEvent<HTMLButtonElement>,
+    task: Task | undefined
+  ) => {
+    setActionIconsAnchorEl(event.currentTarget);
+    setActionOpen(true);
+    if (task) {
+      setActiveTask(task);
+    }
+  };
+  const handleClose = (category: string) => {
     setAnchorEl(null);
+    if (category) {
+      setSelectedCategory(category);
+      dispatch(
+        fetchTasks({
+          userId: userData.uid,
+          category: category.toLocaleUpperCase() as "WORK" | "PERSONAL",
+        })
+      );
+    }
+  };
+  const handleClear = () => {
+    setSearch("");
+    dispatch(fetchTasks({ userId: userData.uid }));
+  };
+  const onActionsClose = (action: string) => {
+    setActionIconsAnchorEl(null);
+    setActionOpen(false);
+    if (action === "delete") {
+      dispatch(deleteTask({ taskId: activeTask.id, userId: userData.uid }));
+    } else if (action === "edit") {
+      console.log("activeTask", activeTask);
+      setCreateTaskModalOpen(true);
+      setActionType("editTask");
+    }
   };
 
-  const [expanded, setExpanded] = useState(false);
-
-  const handleChange = () => {
-    setExpanded((prev) => !prev);
+  const [todoListExpanded, setTodoListExpanded] = useState(true);
+  const [progressListExpanded, setProgressListExpanded] = useState(true);
+  const [completedListExpanded, setCompletedListExpanded] = useState(true);
+  const [viewType, setViewType] = useState("list");
+  const [selectedTaskList, setSelectedTaskList] = useState<Task[]>([]);
+  const handleChange = (setExpanded: any) => {
+    setExpanded((prev: any) => !prev);
   };
+
+  const onViewChange = (view: string) => {
+    setViewType(view);
+  };
+
+  const filterOnDueDate = (date: Date | null) => {
+    if (!date) {
+      setSelectedDate(null);
+      dispatch(fetchTasks({ userId: userData.uid }));
+      return;
+    }
+
+    setSelectedDate(date);
+
+    const formattedDate = date.toISOString().split("T")[0];
+    console.log("Formatted Date:", formattedDate);
+
+    dispatch(fetchTasks({ userId: userData.uid, dueDate: formattedDate }));
+  };
+
+  const onDragEnd = (result: any) => {
+    const { source, destination, draggableId } = result;
+    if (!destination) return;
+    console.log("source===>", result);
+    const sourceList = [...displayTasks[source.droppableId]];
+    const destList = [...displayTasks[destination.droppableId]];
+
+    const [movedItem] = sourceList.splice(source.index, 1);
+    destList.splice(destination.index, 0, movedItem);
+
+    setDisplaytasks({
+      ...displayTasks,
+      [source.droppableId]: sourceList,
+      [destination.droppableId]: destList,
+    });
+
+    dispatch(
+      updateTask({
+        id: draggableId,
+        updates: {
+          status:
+            destination.droppableId === "todo"
+              ? "TO_DO"
+              : destination.droppableId === "progress"
+              ? "IN_PROGRESS"
+              : "COMPLETED",
+        },
+        userId: userData.uid,
+      })
+    );
+  };
+  const formatDate = (dateStr: string): string => {
+    const date = new Date(dateStr);
+    const today = new Date();
+
+    if (
+      date.getFullYear() === today.getFullYear() &&
+      date.getMonth() === today.getMonth() &&
+      date.getDate() === today.getDate()
+    ) {
+      return "Today";
+    }
+
+    const options: Intl.DateTimeFormatOptions = {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    };
+    return date.toLocaleDateString("en-US", options);
+  };
+
   return (
     <div>
       <Box
@@ -95,6 +235,20 @@ const TaskManager: React.FC = () => {
           marginBottom: "2rem",
         }}
       >
+        {selectedTaskList.length > 0 && (
+          <BottomPopup
+            selectedTaskList={selectedTaskList}
+            setSelectedTaskList={setSelectedTaskList}
+          ></BottomPopup>
+        )}
+        <CreateTaskModal
+          open={createTaskModalOpen}
+          setOpen={setCreateTaskModalOpen}
+          modalType={actionType}
+          // initialTaskdata={activeTask}
+          taskData={activeTask}
+          setTaskData={setActiveTask}
+        ></CreateTaskModal>
         <Box sx={{ display: "flex", alignItems: "center" }}>
           <AssignmentIcon sx={{ color: "secondary.light" }}></AssignmentIcon>
           <Typography color="secondary.light" variant="h6">
@@ -103,33 +257,59 @@ const TaskManager: React.FC = () => {
         </Box>
 
         <Box sx={{ display: "flex", alignItems: "center" }}>
-          <Avatar
-            sx={{ mr: 1 }}
-            alt="Remy Sharp"
-            src="/static/images/avatar/1.jpg"
-          />
-          <Typography variant="body2">User</Typography>
+          <Avatar sx={{ mr: 1 }} alt="Remy Sharp" src={userData.photoURL} />
+          <Typography variant="body2" textTransform={"capitalize"}>
+            {userData.displayName}
+          </Typography>
         </Box>
       </Box>
 
-      <Box sx={{ display: "flex", justifyContent: "space-between" ,marginBottom: "2rem",}}>
-        <Box sx={{ display: "flex", alignItems: "center" ,gap:"1rem"}}>
+      <Box
+        sx={{
+          display: { sm: "flex", xs: "none" },
+          justifyContent: "space-between",
+          marginBottom: "2rem",
+        }}
+      >
+        <Box sx={{ display: "flex", alignItems: "center", gap: "1rem" }}>
           <Button
-            variant="text"
-            
-            sx={{ textTransform: "none", borderRadius: "3rem" ,color:"secondary.contrastText"}}
+            sx={{
+              textTransform: "none",
+              borderRadius: "0rem",
+              color:
+                viewType === "list"
+                  ? "secondary.main"
+                  : "secondary.contrastText",
+              borderBottom: viewType === "list" ? "2px solid black" : "0px",
+            }}
+            onClick={() => {
+              onViewChange("list");
+            }}
           >
             {" "}
-            <ViewListIcon sx={{ fontSize: "1.3rem", mr: "0.3rem" }}></ViewListIcon>
+            <ViewListIcon
+              sx={{ fontSize: "1.3rem", mr: "0.3rem" }}
+            ></ViewListIcon>
             List
           </Button>
           <Button
-            variant="text"
-            
-            sx={{ textTransform: "none", borderRadius: "3rem" ,color:"secondary.contrastText"}}
+            onClick={() => {
+              onViewChange("board");
+            }}
+            sx={{
+              textTransform: "none",
+              borderRadius: "0rem",
+              color:
+                viewType === "board"
+                  ? "secondary.main"
+                  : "secondary.contrastText",
+              borderBottom: viewType === "board" ? "2px solid black" : "0px",
+            }}
           >
             {" "}
-            <GridViewIcon sx={{ fontSize: "1.3rem", mr: "0.3rem" }}></GridViewIcon>
+            <GridViewIcon
+              sx={{ fontSize: "1.3rem", mr: "0.3rem" }}
+            ></GridViewIcon>
             Board
           </Button>
         </Box>
@@ -138,6 +318,10 @@ const TaskManager: React.FC = () => {
             variant="outlined"
             color="secondary"
             sx={{ textTransform: "none", borderRadius: "0.5rem" }}
+            onClick={() => {
+              dispatch(logout());
+              Navigate({ to: "/" });
+            }}
           >
             {" "}
             <LogoutIcon sx={{ fontSize: "1rem", mr: "0.1rem" }}></LogoutIcon>
@@ -146,126 +330,740 @@ const TaskManager: React.FC = () => {
         </Box>
       </Box>
 
-      <Box sx={{ display: "flex", justifyContent: "space-between", }}>
-        <Box sx={{ display: "flex", alignItems: "center" ,gap:"1rem"}}>
-         
-           <Typography variant="body2" color="secondary.light">
-        Filter by:
-      </Typography>
-
-      <Button
-        variant="outlined"
-        color="secondary"
-        onClick={handleClick}
-       
+      <Box
         sx={{
-          fontSize:"0.8rem"
-        }}
-        style={{
-          textTransform: "none",
-          borderRadius: "2rem",
-          
-        }}
-        endIcon={<KeyboardArrowDownIcon />}
-      >
-        Category
-      </Button>
-      <Menu
-        anchorEl={anchorEl}
-        open={open}
-        onClose={handleClose}
-        PaperProps={{
-          style: {
-            borderRadius: "12px",
-            boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
-            padding: "0.2rem",
-            marginTop: "0.5rem",
-          },
-        }}
-        anchorOrigin={{
-          vertical: "bottom", // Align to the bottom of the button
-          horizontal: "center", // Center horizontally
-        }}
-        transformOrigin={{
-          vertical: "top", // Align to the top of the menu
-          horizontal: "center", // Center horizontally
+          display: "flex",
+          justifyContent: "space-between",
+          flexDirection: { sm: "row", xs: "column" },
+          gap: { xs: "1rem" },
         }}
       >
-        <MenuItem sx={{fontSize:"0.9rem"}} onClick={handleClose}>Work</MenuItem>
-        <MenuItem sx={{fontSize:"0.9rem"}}  onClick={handleClose}>Personal</MenuItem>
-      </Menu>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: "1rem",
+            position: "relative",
+            order: { sm: 1, xs: 2 },
+          }}
+        >
+          <Typography variant="body2" color="secondary.light">
+            Filter by:
+          </Typography>
 
-      <Button
-        variant="outlined"
-        style={{
-          textTransform: "none",
-          borderRadius: "2rem",
-        }}
-        color="secondary"
-        sx={{
-          fontSize:"0.8rem"
-        }}
-        endIcon={<KeyboardArrowDownIcon />}
-      >
-        Due Date
-      </Button>
+          <Button
+            variant="outlined"
+            color="secondary"
+            onClick={handleClick}
+            sx={{
+              fontSize: "0.8rem",
+            }}
+            style={{
+              borderRadius: "2rem",
+              textTransform: "capitalize",
+            }}
+            endIcon={<KeyboardArrowDownIcon />}
+          >
+            {selectedCategory || "Category"}
+          </Button>
+          <Menu
+            anchorEl={anchorEl}
+            open={open}
+            onClose={() => handleClose("")}
+            PaperProps={{
+              style: {
+                border: "1px solid rgb(240, 204, 204)",
+                borderRadius: "8px",
+                boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
+                padding: "0.2rem",
+                marginTop: "0.5rem",
+                backgroundColor: "#fff9f9",
+              },
+            }}
+            anchorOrigin={{
+              vertical: "bottom",
+              horizontal: "center",
+            }}
+            transformOrigin={{
+              vertical: "top",
+              horizontal: "center",
+            }}
+          >
+            <MenuItem
+              sx={{
+                fontSize: "1rem",
+                backgroundColor:
+                  selectedCategory === "Work" ? "#f0cccc" : "#fff9f9",
+              }}
+              onClick={() => handleClose("Work")}
+            >
+              Work
+            </MenuItem>
+            <MenuItem
+              sx={{
+                fontSize: "1rem",
+                backgroundColor:
+                  selectedCategory === "Personal" ? "#f0cccc" : "#fff9f9",
+              }}
+              onClick={() => handleClose("Personal")}
+            >
+              Personal
+            </MenuItem>
+          </Menu>
+          <DatePicker
+            selected={selectedDate}
+            onChange={(date) => {
+              console.log(date);
+
+              filterOnDueDate(date);
+            }}
+            dateFormat="dd MMM, yyyy"
+            placeholderText="Due Date"
+            customInput={
+              <Button
+                variant="outlined"
+                color="secondary"
+                style={{
+                  textTransform: "none",
+                  borderRadius: "2rem",
+                  fontSize: "0.8rem",
+                  color: selectedDate ? "black" : "inherit",
+                  backgroundColor: selectedDate ? "#f0cccc" : "transparent",
+                }}
+                endIcon={<KeyboardArrowDownIcon />}
+              >
+                {selectedDate
+                  ? selectedDate.toLocaleDateString("en-GB", {
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                    })
+                  : "Due Date"}
+              </Button>
+            }
+          />
+          {(selectedDate || selectedCategory) && (
+            <IconButton
+              sx={{
+                position: "absolute",
+                right: "-3rem",
+                color: "gray",
+                border: "1px solid",
+                padding: "0.3rem",
+              }}
+              onClick={() => {
+                filterOnDueDate(null);
+                if (selectedCategory) {
+                  setSelectedCategory("");
+                }
+              }}
+            >
+              <ClearIcon />
+            </IconButton>
+          )}
         </Box>
-        <Box>
+        <Box
+          sx={{
+            order: { sm: 2, xs: 1 },
+            display: "flex",
+            flexDirection: { sm: "row", xs: "column" },
+            alignItems: { xs: "flex-end" },
+            gap: { xs: "1rem" },
+          }}
+        >
+          <TextField
+            variant="outlined"
+            size="small"
+            placeholder="Search..."
+            value={search}
+            onChange={(e) => {
+              dispatch(
+                fetchTasks({ userId: userData.uid, searchTerm: e.target.value })
+              );
+              console.log("e.target.value", e.target.value);
+              setSearch(e.target.value);
+            }}
+            sx={{
+              width: { sm: 200, xs: "90vw" },
+              borderRadius: "20px",
+              backgroundColor: "white",
+              marginRight: { sm: "1rem", xs: "0rem" },
+              "& .MuiOutlinedInput-root": {
+                borderRadius: "20px",
+                paddingLeft: "8px",
+                paddingRight: "8px",
+              },
+              "& .MuiInputBase-input": {
+                padding: "6px 10px",
+              },
+              order: { xs: 2 },
+            }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon color="disabled" />
+                </InputAdornment>
+              ),
+              endAdornment: search && (
+                <InputAdornment position="end">
+                  <IconButton size="small" onClick={handleClear}>
+                    <ClearIcon />
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+          />
           <Button
             variant="contained"
             color="primary"
-            sx={{ textTransform: "none", borderRadius: "3rem" ,px:"2rem"}}
+            sx={{
+              textTransform: "none",
+              borderRadius: "3rem",
+              px: "2rem",
+              ":hover": { backgroundColor: "#7b1984" },
+              order: { xs: 1 },
+              width: "fit-content",
+            }}
+            onClick={handleClickOpen}
           >
             Add Task
           </Button>
         </Box>
       </Box>
-      <Divider sx={{py:"1rem"}}></Divider>
-      <Box>
-      <Box>sdgdfgf</Box>
+      {viewType === "list" && <Divider sx={{ py: "1rem" }}></Divider>}
+      {tasks.length === 0 && (
+        <Box minHeight={"60vh"} display={"flex"} alignItems={"center"}>
+          <NoResultsFound></NoResultsFound>
+        </Box>
+      )}
+      {tasks.length > 0 && (
+        <Box>
+          {viewType === "list" && (
+            <Box
+              sx={{
+                display:{sm: "flex",xs:"none"},
+                justifyContent: "space-between",
+                alignItems: "center",
+                padding: "10px 16px",
+                fontSize: "0.9rem",
+                fontWeight: "500",
+              }}
+            >
+              <Box
+                sx={{
+                  flex: 1,
+                  textAlign: "left",
+                  minWidth: "100px",
+                }}
+              >
+                Task name
+              </Box>
+              <Box
+                sx={{
+                  flex: 1,
+                  textAlign: "left",
+                  minWidth: "100px",
+                }}
+              >
+                Due on
+              </Box>
+              <Box
+                sx={{
+                  flex: 1,
+                  textAlign: "left",
+                  minWidth: "100px",
+                }}
+              >
+                {" "}
+                Task Status
+              </Box>
+              <Box
+                sx={{
+                  flex: 1,
+                  textAlign: "left",
+                  minWidth: "100px",
+                }}
+              >
+                Task Category
+              </Box>
+            </Box>
+          )}
+          <Box>
+            <DragDropContext onDragEnd={onDragEnd}>
+              <Box
+                display="flex"
+                flexDirection={viewType === "list" ? "column" : "row"}
+                justifyContent="space-around"
+              >
+                {Object.entries(displayTasks).map(([status, taskList]) => {
+                  // console.log("taskList===>", taskList);
+                  return (
+                    <Droppable key={status} droppableId={status}>
+                      {(provided) => (
+                        <Box
+                          ref={provided.innerRef}
+                          {...provided.droppableProps}
+                          sx={{
+                            width: "100%",
+                            minHeight: 200,
+                            p: 2,
+                          }}
+                        >
+                          <Accordion
+                            expanded={
+                              status === "todo"
+                                ? todoListExpanded
+                                : status === "progress"
+                                ? progressListExpanded
+                                : completedListExpanded
+                            }
+                            onChange={() => {
+                              console.log(status);
+                              handleChange(
+                                status === "todo"
+                                  ? setTodoListExpanded
+                                  : status === "progress"
+                                  ? setProgressListExpanded
+                                  : setCompletedListExpanded
+                              );
+                            }}
+                            sx={{
+                              "&:first-of-type": {
+                                borderTopLeftRadius: "14px",
+                                borderTopRightRadius: "14px",
+                              },
+                              "&:last-of-type": {
+                                borderBottomLeftRadius: "19px",
+                                borderBottomRightRadius: "19px",
+                              },
+                              borderRadius:
+                                todoListExpanded ||
+                                progressListExpanded ||
+                                completedListExpanded
+                                  ? "1rem 1rem 0 0"
+                                  : "1rem",
+                              overflow: "hidden",
+                              "&:before": { display: "none" },
+                            }}
+                            key={status}
+                          >
+                            <AccordionSummary
+                              expandIcon={
+                                viewType === "list" && <ExpandMoreIcon />
+                              }
+                              aria-controls="panel2-content"
+                              id="panel2-header"
+                              sx={{
+                                backgroundColor:
+                                  viewType === "list"
+                                    ? status === "todo"
+                                      ? "info.light"
+                                      : status === "progress"
+                                      ? "info.contrastText"
+                                      : "info.main"
+                                    : "#f1f1f1",
+                                borderRadius:
+                                  todoListExpanded ||
+                                  progressListExpanded ||
+                                  completedListExpanded
+                                    ? "1rem 1rem 0 0"
+                                    : "1rem",
+                              }}
+                            >
+                              <Typography
+                                variant="h6"
+                                sx={{
+                                  mb: 0,
+                                  textTransform: "uppercase",
+                                  backgroundColor:
+                                    viewType === "board"
+                                      ? status === "todo"
+                                        ? "info.light"
+                                        : status === "progress"
+                                        ? "info.contrastText"
+                                        : "info.main"
+                                      : "",
+                                  padding:
+                                    viewType === "board" ? "0.2rem 1rem" : "",
+                                  borderRadius:
+                                    viewType === "board" ? "0.5rem" : "",
+                                  fontSize: "1rem",
+                                }}
+                              >
+                                {status.replace(/([A-Z])/g, " $1")} (
+                                {taskList.length})
+                              </Typography>
+                            </AccordionSummary>
+                            <AccordionDetails
+                              sx={{
+                                backgroundColor: "#f1f1f1",
+                                borderRadius:
+                                  todoListExpanded ||
+                                  progressListExpanded ||
+                                  completedListExpanded
+                                    ? "0 0 1rem 1rem"
+                                    : "1rem",
+                                paddingLeft:
+                                  viewType === "list" ? "0px" : "16px",
+                                paddingRight:
+                                  viewType === "list" ? "0px" : "16px",
+                                maxHeight: "300px",
+                                minHeight:
+                                  viewType === "board" ? "60vh" : "fit-content",
+                              }}
+                            >
+                              {taskList.length === 0 ? (
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    justifyContent: "center",
+                                    alignItems: "center",
+                                    minHeight:
+                                      viewType === "list" ? "250px" : "50vh",
+                                  }}
+                                >
+                                  No Tasks in {status}
+                                </Box>
+                              ) : (
+                                taskList.map((task: Task, index: number) => {
+                                  console.log("task========>", task);
 
-      <Box>
-      <Accordion 
-      expanded={expanded}
-      onChange={handleChange} 
-      sx={{
-        "&:first-of-type": {
-          borderTopLeftRadius: "14px",
-          borderTopRightRadius: "14px",
-        },
-        "&:last-of-type": {
-          borderBottomLeftRadius: "19px",
-          borderBottomRightRadius: "19px",
-        },
-        borderRadius: expanded ? "1rem 1rem 0 0" : "1rem",
-        overflow: "hidden", // Prevents content overflow during animation
-        "&:before": { display: "none" }, // Removes the default MUI divider line
-      }}>
-        <AccordionSummary
-          expandIcon={<ExpandMoreIcon />}
-          aria-controls="panel2-content"
-          id="panel2-header"
-          sx={{
-            backgroundColor: "info.light",
-            borderRadius: expanded ? "1rem 1rem 0 0" : "1rem",
-          }}
-        >
-          <Typography component="span">Todo (2)</Typography>
-        </AccordionSummary>
-        <AccordionDetails  sx={{
-          backgroundColor: "info.dark",
-          borderRadius: expanded ? "0 0 1rem 1rem" : "1rem",
-        }}>
-          <Typography>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse
-            malesuada lacus ex, sit amet blandit leo lobortis eget.
-          </Typography>
-        </AccordionDetails>
-      </Accordion>
-      </Box>
-      
-      </Box>
-      
+                                  return (
+                                    <Draggable
+                                      key={task.id}
+                                      draggableId={task.id}
+                                      index={index}
+                                    >
+                                      {(provided) => (
+                                        <Box
+                                          ref={provided.innerRef}
+                                          {...provided.draggableProps}
+                                          {...provided.dragHandleProps}
+                                          sx={{
+                                            border:
+                                              viewType === "board"
+                                                ? "0.5px solid #dddadd"
+                                                : "0px",
+                                            borderBottom:
+                                              index !== taskList.length - 1 &&
+                                              "0.5px solid #dddadd",
+                                            display: "flex",
+                                            flexDirection: "row", // Stack elements for board view
+                                            justifyContent: "space-between",
+                                            marginBottom:
+                                              viewType === "board"
+                                                ? "1rem"
+                                                : "0rem",
+                                            alignItems:
+                                              viewType === "board"
+                                                ? "flex-start"
+                                                : "center", // Ensure vertical alignment
+                                            fontSize: "0.9rem",
+                                            fontWeight: "500",
+                                            flexWrap: "wrap",
+                                            minHeight:
+                                              viewType === "board" && "100px",
+                                            boxShadow:
+                                              viewType === "board" ? 3 : 0,
+                                            backgroundColor:
+                                              viewType === "board" && "white",
+                                            borderRadius:
+                                              viewType === "board"
+                                                ? "12px"
+                                                : "0px",
+                                            padding:
+                                              viewType === "board"
+                                                ? "0.7rem"
+                                                : "0.3rem",
+                                          }}
+                                          key={task.id}
+                                        >
+                                          <Box
+                                            sx={{
+                                              flex: 2,
+                                              textAlign: "left",
+                                              minWidth:
+                                                viewType === "list"
+                                                  ? "100px"
+                                                  : "50%",
+                                              order: 1,
+                                            }}
+                                          >
+                                            <Box
+                                              sx={{
+                                                display: "flex",
+                                                alignItems: "center",
+                                                width: "100%",
+                                                order: 2,
+                                                fontSize:
+                                                  viewType === "board"
+                                                    ? "1rem"
+                                                    : "",
+                                                fontWeight:
+                                                  viewType === "board"
+                                                    ? 700
+                                                    : "",
+                                                textDecoration:
+                                                  status === "completed"
+                                                    ? "line-through"
+                                                    : "none",
+                                                overflow: "hidden",
+                                                whiteSpace: "nowrap",
+                                                textOverflow: "ellipsis",
+                                              }}
+                                            >
+                                              {viewType === "list" && (
+                                                <>
+                                                  <Checkbox
+                                                    sx={{
+                                                      paddingRight: "0px",
+                                                      paddingLeft: "0px",
+                                                    }}
+                                                    onChange={(e) => {
+                                                      if (e.target.checked) {
+                                                        setSelectedTaskList([
+                                                          ...selectedTaskList,
+                                                          task,
+                                                        ]);
+                                                      } else {
+                                                        const filteredTask = [
+                                                          ...selectedTaskList,
+                                                        ].filter(
+                                                          (selectedTask) =>
+                                                            selectedTask.id !==
+                                                            task.id
+                                                        );
+                                                        setSelectedTaskList(
+                                                          filteredTask
+                                                        );
+                                                      }
+                                                    }}
+                                                  />
+                                                  <DragIndicatorIcon
+                                                    sx={{ color: "#a7a7a7" }}
+                                                  ></DragIndicatorIcon>{" "}
+                                                  <CheckCircleIcon
+                                                    sx={{
+                                                      mr: "0.5rem",
+                                                      color:
+                                                        status === "completed"
+                                                          ? "#1b8d17"
+                                                          : "#a7a7a7",
+                                                    }}
+                                                  ></CheckCircleIcon>
+                                                </>
+                                              )}
+                                              <Box
+                                                sx={{
+                                                  overflow: "hidden",
+                                                  whiteSpace: "nowrap",
+                                                  textOverflow: "ellipsis",
+                                                  flex: 1, // Ensures it takes available space
+                                                }}
+                                              >
+                                                {task.title}
+                                              </Box>
+                                            </Box>
+                                          </Box>
+                                          <Box
+                                            sx={{
+                                              flex: 2,
+                                              display:{xs:"none",sm:"flex"},
+                                              textAlign:
+                                                viewType === "list"
+                                                  ? "left"
+                                                  : "right",
+                                              minWidth:
+                                                viewType === "list"
+                                                  ? "100px"
+                                                  : "50%",
+                                              order:
+                                                viewType === "board" ? 5 : 2,
+                                              alignSelf:
+                                                viewType === "board" &&
+                                                "flex-end",
+                                              color:
+                                                viewType === "board"
+                                                  ? "secondary.contrastText"
+                                                  : "",
+                                              fontSize:
+                                                viewType === "board"
+                                                  ? "0.8rem"
+                                                  : "",
+                                            }}
+                                          >
+                                            {formatDate(task.dueDate)}
+                                          </Box>
+                                          {viewType === "list" && (
+                                            <Box
+                                              sx={{
+                                                flex: 2,
+                                                textAlign: "left",
+                                                minWidth: "100px",
+                                                order: 3,
+                                                display:{xs:"none",sm:"flex"},
+                                              }}
+                                            >
+                                              <Button
+                                                color="secondary"
+                                                sx={{
+                                                  backgroundColor: "#dddadd",
+                                                }}
+                                              >
+                                                {task.status
+                                                  .split("_")
+                                                  .join("-")}
+                                              </Button>
+                                            </Box>
+                                          )}
+
+                                          <Box
+                                            sx={{
+                                              flex: 1,
+                                              textAlign: "left",
+                                              minWidth:
+                                                viewType === "list"
+                                                  ? "100px"
+                                                  : "50%",
+                                              textTransform: "lowercase",
+                                              alignSelf:
+                                                viewType === "board" &&
+                                                "flex-end",
+                                              order: 4,
+                                              color:
+                                                viewType === "board"
+                                                  ? "secondary.contrastText"
+                                                  : "",
+                                              fontSize:
+                                                viewType === "board"
+                                                  ? "0.8rem"
+                                                  : "",
+                                                  display:{xs:"none",sm:"flex"},
+                                            }}
+                                          >
+                                            {task.category}
+                                          </Box>
+                                          <Box
+                                            sx={{
+                                              flex: 1,
+                                              textAlign: "right",
+                                              minWidth:
+                                                viewType === "list"
+                                                  ? "50px"
+                                                  : "50%",
+                                              // alignSelf:viewType==="board" && "flex-end"
+                                              order:
+                                                viewType === "board" ? 3 : 5,
+                                                display:{xs:"none",sm:"flex"},
+                                            }}
+                                          >
+                                            <IconButton
+                                              color="secondary"
+                                              onClick={(e) =>
+                                                onActionsCLick(e, task)
+                                              }
+                                              sx={{
+                                                fontSize: "0.8rem",
+                                              }}
+                                              style={{
+                                                borderRadius: "2rem",
+                                                textTransform: "capitalize",
+                                              }}
+                                            >
+                                              <MoreHorizIcon />
+                                            </IconButton>
+
+                                            <Menu
+                                              anchorEl={actionIconsAnchorEl}
+                                              open={actionOpen}
+                                              onClose={() => {
+                                                onActionsClose("");
+                                              }}
+                                              PaperProps={{
+                                                style: {
+                                                  border:
+                                                    "1px solid rgb(240, 204, 204)",
+                                                  borderRadius: "8px",
+                                                  boxShadow:
+                                                    "0px 4px 10px rgba(0, 0, 0, 0.1)",
+                                                  padding: "0rem",
+                                                  marginTop: "0rem",
+                                                  backgroundColor: "#fff9f9",
+                                                },
+                                              }}
+                                              anchorOrigin={{
+                                                vertical: "bottom",
+                                                horizontal: "left",
+                                              }}
+                                              transformOrigin={{
+                                                vertical: "top",
+                                                horizontal: "center",
+                                              }}
+                                              key={task.id}
+                                            >
+                                              <MenuItem
+                                                sx={{
+                                                  fontSize: "0.9rem",
+                                                  padding: "0.3rem",
+                                                  marginBottom: "0.3rem",
+                                                  paddingRight: "3rem",
+                                                  fontWeight: "500",
+                                                }}
+                                                key={"edit"}
+                                                onClick={() => {
+                                                  onActionsClose("edit");
+                                                }}
+                                              >
+                                                <BorderColorIcon
+                                                  sx={{
+                                                    mr: "0.5rem",
+                                                    fontSize: "1.2rem",
+                                                  }}
+                                                ></BorderColorIcon>{" "}
+                                                Edit
+                                              </MenuItem>
+                                              <MenuItem
+                                                sx={{
+                                                  fontSize: "0.9rem",
+                                                  padding: "0.3rem",
+                                                  paddingRight: "3rem",
+                                                  color: "#da2f2f",
+                                                }}
+                                                key={"delete"}
+                                                onClick={() => {
+                                                  onActionsClose("delete");
+                                                }}
+                                              >
+                                                <DeleteIcon
+                                                  sx={{
+                                                    mr: "0.5rem",
+                                                    fontSize: "1.2rem",
+                                                    color: "#da2f2f",
+                                                  }}
+                                                ></DeleteIcon>
+                                                Delete
+                                              </MenuItem>
+                                            </Menu>
+                                          </Box>
+                                        </Box>
+                                      )}
+                                    </Draggable>
+                                  );
+                                })
+                              )}
+                              {provided.placeholder}
+                            </AccordionDetails>
+                          </Accordion>
+                        </Box>
+                      )}
+                    </Droppable>
+                  );
+                })}
+              </Box>
+            </DragDropContext>
+          </Box>
+        </Box>
+      )}
     </div>
   );
 };

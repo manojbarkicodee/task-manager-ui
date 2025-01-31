@@ -1,4 +1,3 @@
-// src/redux/authSlice.ts
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 interface User {
@@ -27,11 +26,13 @@ const authSlice = createSlice({
       console.log("user====>",action.payload);
       state.isLoggedIn = true;
       localStorage.setItem('isLoggedIn', 'true');
+      localStorage.setItem('userData',JSON.stringify(action.payload))
     },
     logout: (state) => {
       state.user = null;
       state.isLoggedIn = false;
       localStorage.removeItem('isLoggedIn');
+      localStorage.removeItem("userData");
     },
   },
 });
