@@ -5,6 +5,7 @@ import {
   Typography,
   Card,
   CardContent,
+  Box,
 } from "@mui/material";
 import GoogleIcon from "@mui/icons-material/Google";
 import { useDispatch } from "react-redux";
@@ -15,17 +16,13 @@ import { auth } from "../firebase";
 const Login: React.FC = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  // const auth = getAuth();
 
-  // Google login function
   const handleGoogleLogin = async () => {
     const provider = new GoogleAuthProvider();
 
     try {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
-      console.log("user===>", user);
-      // Dispatch user data to Redux
       dispatch(
         setUser({
           uid: user.uid,
@@ -35,7 +32,6 @@ const Login: React.FC = () => {
         })
       );
 
-      // Redirect to task manager after login
       navigate("/task-manager");
     } catch (error: any) {
       console.error(error.message);
@@ -45,7 +41,7 @@ const Login: React.FC = () => {
     <Grid
       container
       sx={{
-        height: "95vh",
+        maxHeight: "95vh",
         backgroundColor: "#f9f6f6",
         display: "flex",
         alignItems: "center",
@@ -53,7 +49,6 @@ const Login: React.FC = () => {
         padding: 2,
       }}
     >
-      {/* Left Section */}
       <Grid
         item
         xs={12}
@@ -73,12 +68,12 @@ const Login: React.FC = () => {
             color: "#7f2087",
             marginBottom: 1,
             textAlign: { xs: "center" },
-            margin: { xs: "auto" },
+            margin: { xs: "auto",sm:"inherit" },
           }}
         >
           TaskBuddy
         </Typography>
-        <Typography variant="subtitle1" sx={{ color: "#555", marginBottom: 3 ,textAlign:{xs:"center"}}}>
+        <Typography variant="subtitle1" sx={{ color: "#555", marginBottom: 3 ,textAlign:{xs:"center",sm:"left",},width:{sm:"70%",xs:"inherit"}}}>
           Streamline your workflow and track progress effortlessly with our
           all-in-one task management app.
         </Typography>
@@ -94,15 +89,15 @@ const Login: React.FC = () => {
             "&:hover": {
               backgroundColor: "#333",
             },
-            margin:{xs:"auto"}
+            margin:{xs:"auto",sm:"inherit"}
           }}
           onClick={handleGoogleLogin}
         >
           Continue with Google
         </Button>
+        <BackgroundCircles></BackgroundCircles>
       </Grid>
 
-      {/* Right Section */}
       <Grid
         item
         xs={12}
@@ -114,12 +109,30 @@ const Login: React.FC = () => {
           padding: 2,
         }}
       >
+     {["40vw", "45vw", "48vw"].map((size, index) => (
+          <Box
+            key={index}
+            sx={{
+              position: "absolute",
+              width: size,
+              height: size,
+              borderRadius: "50%",
+              border: "2px solid rgba(127, 32, 135, 0.4)", // Light Purple Border
+              zIndex: 1,
+              right: "15%",
+              top: "50%",
+              transform: "translateY(-50%)",
+            }}
+          />
+        ))}
+
         <Card
           sx={{
             width: "100%",
             maxWidth: "100%",
             boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
             borderRadius: 4,
+            zIndex:2,
           }}
         >
           <CardContent>
@@ -131,7 +144,7 @@ const Login: React.FC = () => {
                 borderRadius: "10px",
                 marginBottom: 10,
                 objectFit: "cover",
-                height: "100%",
+                // height: "100%",
               }}
             />
           </CardContent>
@@ -142,3 +155,57 @@ const Login: React.FC = () => {
 };
 
 export default Login;
+
+
+
+
+
+
+const BackgroundCircles: React.FC = () => {
+  return (
+    <Box
+      sx={{
+        position: "absolute",
+        width: "100%",
+        height: "100%",
+        overflow: "hidden",
+        display:{sm:"none",xs:"inherit"}
+      }}
+    >
+      {[
+        { top: "19px", right:"-125px" },
+        { top:"50%"},
+        { bottom: "-20px", left: "50%" },
+      ].map((pos, index) => (
+        <Box
+          key={index}
+          sx={{
+            position: "absolute",
+            width: 150,
+            height: 150,
+            ...pos,
+            transform: "translate(-50%, -50%)",
+          }}
+        >
+          {[60, 80, 100].map((size, i) => (
+            <Box
+              key={i}
+              sx={{
+                position: "absolute",
+                width: `${size}%`,
+                height: `${size}%`,
+                borderRadius: "50%",
+                border: "2px solid rgba(127, 32, 135, 0.4)",
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%, -50%)",
+              }}
+            />
+          ))}
+        </Box>
+      ))}
+    </Box>
+  );
+};
+
+// export default BackgroundCircles;

@@ -13,6 +13,7 @@ import {
   IconButton,
   TextField,
   InputAdornment,
+  useMediaQuery,
 } from "@mui/material";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
@@ -72,16 +73,17 @@ const TaskManager: React.FC = () => {
   const [actionType, setActionType] = useState("");
   const [search, setSearch] = useState("");
   const [displayTasks, setDisplaytasks] = useState<any>({
-    todo: todoList||[],
-    progress: progressList||[],
-    completed: completedList||[],
+    todo: todoList || [],
+    progress: progressList || [],
+    completed: completedList || [],
   });
+  const isMobileDevice = useMediaQuery("(max-width: 600px)");
+
   const handleClickOpen = () => {
     setCreateTaskModalOpen(true);
     setActionType("newTask");
   };
   useEffect(() => {
-    console.log(userData);
     dispatch(fetchTasks({ userId: userData.uid }));
   }, [dispatch]);
 
@@ -97,11 +99,9 @@ const TaskManager: React.FC = () => {
       progress: progressList,
       completed: completedList,
     });
-    console.log("tasks=====>", progressList, todoList, completedList);
   }, [todoList]);
 
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    console.log("event=======>", event.currentTarget);
     setAnchorEl(event.currentTarget);
   };
 
@@ -137,7 +137,6 @@ const TaskManager: React.FC = () => {
     if (action === "delete") {
       dispatch(deleteTask({ taskId: activeTask.id, userId: userData.uid }));
     } else if (action === "edit") {
-      console.log("activeTask", activeTask);
       setCreateTaskModalOpen(true);
       setActionType("editTask");
     }
@@ -166,7 +165,6 @@ const TaskManager: React.FC = () => {
     setSelectedDate(date);
 
     const formattedDate = date.toISOString().split("T")[0];
-    console.log("Formatted Date:", formattedDate);
 
     dispatch(fetchTasks({ userId: userData.uid, dueDate: formattedDate }));
   };
@@ -174,7 +172,6 @@ const TaskManager: React.FC = () => {
   const onDragEnd = (result: any) => {
     const { source, destination, draggableId } = result;
     if (!destination) return;
-    console.log("source===>", result);
     const sourceList = [...displayTasks[source.droppableId]];
     const destList = [...displayTasks[destination.droppableId]];
 
@@ -229,6 +226,9 @@ const TaskManager: React.FC = () => {
           display: "flex",
           justifyContent: "space-between",
           marginBottom: "2rem",
+          backgroundColor: { sm: "inherit", xs: "#faeefc" },
+          padding: { sm: "0px", xs: "16px" },
+          borderBottom: { sm: "0px", xs: "0.5px solid #dddadd" },
         }}
       >
         {selectedTaskList.length > 0 && (
@@ -241,7 +241,6 @@ const TaskManager: React.FC = () => {
           open={createTaskModalOpen}
           setOpen={setCreateTaskModalOpen}
           modalType={actionType}
-          // initialTaskdata={activeTask}
           taskData={activeTask}
           setTaskData={setActiveTask}
         ></CreateTaskModal>
@@ -313,7 +312,11 @@ const TaskManager: React.FC = () => {
           <Button
             variant="outlined"
             color="secondary"
-            sx={{ textTransform: "none", borderRadius: "0.5rem" }}
+            sx={{
+              textTransform: "none",
+              borderRadius: "0.5rem",
+              backgroundColor: "#fff9f9",
+            }}
             onClick={() => {
               dispatch(logout());
               Navigate({ to: "/" });
@@ -331,142 +334,20 @@ const TaskManager: React.FC = () => {
           display: "flex",
           justifyContent: "space-between",
           flexDirection: { sm: "row", xs: "column" },
-          gap: { xs: "1rem",sm:"0rem" },
+          gap: { xs: "1.5rem", sm: "0rem" },
+          padding: { xs: "0px 16px", sm: "0px" },
         }}
       >
         <Box
           sx={{
             display: "flex",
             alignItems: "center",
-            gap: "1rem",
+            gap: "1.5rem",
             position: "relative",
             order: { sm: 1, xs: 2 },
-          }}
-        >
-          <Typography variant="body2" color="secondary.light">
-            Filter by:
-          </Typography>
-
-          <Button
-            variant="outlined"
-            color="secondary"
-            onClick={handleClick}
-            sx={{
-              fontSize: "0.8rem",
-            }}
-            style={{
-              borderRadius: "2rem",
-              textTransform: "capitalize",
-            }}
-            endIcon={<KeyboardArrowDownIcon />}
-          >
-            {selectedCategory || "Category"}
-          </Button>
-          <Menu
-            anchorEl={anchorEl}
-            open={open}
-            onClose={() => handleClose("")}
-            PaperProps={{
-              style: {
-                border: "1px solid rgb(240, 204, 204)",
-                borderRadius: "8px",
-                boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
-                padding: "0.2rem",
-                marginTop: "0.5rem",
-                backgroundColor: "#fff9f9",
-              },
-            }}
-            anchorOrigin={{
-              vertical: "bottom",
-              horizontal: "center",
-            }}
-            transformOrigin={{
-              vertical: "top",
-              horizontal: "center",
-            }}
-          >
-            <MenuItem
-              sx={{
-                fontSize: "1rem",
-                backgroundColor:
-                  selectedCategory === "Work" ? "#f0cccc" : "#fff9f9",
-              }}
-              onClick={() => handleClose("Work")}
-            >
-              Work
-            </MenuItem>
-            <MenuItem
-              sx={{
-                fontSize: "1rem",
-                backgroundColor:
-                  selectedCategory === "Personal" ? "#f0cccc" : "#fff9f9",
-              }}
-              onClick={() => handleClose("Personal")}
-            >
-              Personal
-            </MenuItem>
-          </Menu>
-          <DatePicker
-            selected={selectedDate}
-            onChange={(date: Date | null) => {
-              if (date) {
-                console.log(date);
-                filterOnDueDate(date);
-                setSelectedDate(date);
-              }
-            }}
-            dateFormat="dd MMM, yyyy"
-            placeholderText="Due Date"
-            customInput={
-              <Button
-                variant="outlined"
-                color="secondary"
-                style={{
-                  textTransform: "none",
-                  borderRadius: "2rem",
-                  fontSize: "0.8rem",
-                  color: selectedDate ? "black" : "inherit",
-                  backgroundColor: selectedDate ? "#f0cccc" : "transparent",
-                }}
-                endIcon={<KeyboardArrowDownIcon />}
-              >
-                {selectedDate
-                  ? selectedDate.toLocaleDateString("en-GB", {
-                      day: "2-digit",
-                      month: "short",
-                      year: "numeric",
-                    })
-                  : "Due Date"}
-              </Button>
-            }
-          />
-          {(selectedDate || selectedCategory) && (
-            <IconButton
-              sx={{
-                position: "absolute",
-                right: "-3rem",
-                color: "gray",
-                border: "1px solid",
-                padding: "0.3rem",
-              }}
-              onClick={() => {
-                filterOnDueDate(null);
-                if (selectedCategory) {
-                  setSelectedCategory("");
-                }
-              }}
-            >
-              <ClearIcon />
-            </IconButton>
-          )}
-        </Box>
-        <Box
-          sx={{
-            order: { sm: 2, xs: 1 },
-            display: "flex",
+            width: { sm: "90%", xs: "100%" },
+            justifyContent: "space-between",
             flexDirection: { sm: "row", xs: "column" },
-            alignItems: { xs: "flex-end",sm:"center" },
-            gap: { xs: "1rem",sm:"0rem" },
           }}
         >
           <TextField
@@ -478,11 +359,10 @@ const TaskManager: React.FC = () => {
               dispatch(
                 fetchTasks({ userId: userData.uid, searchTerm: e.target.value })
               );
-              console.log("e.target.value", e.target.value);
               setSearch(e.target.value);
             }}
             sx={{
-              width: { sm: 200, xs: "90vw" },
+              width: { sm: 250, xs: "92vw" },
               borderRadius: "20px",
               backgroundColor: "white",
               marginRight: { sm: "1rem", xs: "0rem" },
@@ -494,7 +374,7 @@ const TaskManager: React.FC = () => {
               "& .MuiInputBase-input": {
                 padding: "6px 10px",
               },
-              order: { xs: 2,sm:1 },
+              order: { xs: 2, sm: 1 },
             }}
             InputProps={{
               startAdornment: (
@@ -511,6 +391,146 @@ const TaskManager: React.FC = () => {
               ),
             }}
           />
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: "1rem",
+              position: "relative",
+              flexWrap: { sm: "nowrap", xs: "wrap" },
+              width: "100%",
+            }}
+          >
+            <Typography
+              sx={{ width: { sm: "fit-content", xs: "100%" } }}
+              variant="body2"
+              color="secondary.light"
+            >
+              Filter by:
+            </Typography>
+
+            <Button
+              variant="outlined"
+              color="secondary"
+              onClick={handleClick}
+              sx={{
+                fontSize: "0.8rem",
+              }}
+              style={{
+                borderRadius: "2rem",
+                textTransform: "capitalize",
+              }}
+              endIcon={<KeyboardArrowDownIcon />}
+            >
+              {selectedCategory || "Category"}
+            </Button>
+            <Menu
+              anchorEl={anchorEl}
+              open={open}
+              onClose={() => handleClose("")}
+              PaperProps={{
+                style: {
+                  border: "1px solid rgb(240, 204, 204)",
+                  borderRadius: "8px",
+                  boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
+                  padding: "0.2rem",
+                  marginTop: "0.5rem",
+                  backgroundColor: "#fff9f9",
+                },
+              }}
+              anchorOrigin={{
+                vertical: "bottom",
+                horizontal: "center",
+              }}
+              transformOrigin={{
+                vertical: "top",
+                horizontal: "center",
+              }}
+            >
+              <MenuItem
+                sx={{
+                  fontSize: "1rem",
+                  backgroundColor:
+                    selectedCategory === "Work" ? "#f0cccc" : "#fff9f9",
+                }}
+                onClick={() => handleClose("Work")}
+              >
+                Work
+              </MenuItem>
+              <MenuItem
+                sx={{
+                  fontSize: "1rem",
+                  backgroundColor:
+                    selectedCategory === "Personal" ? "#f0cccc" : "#fff9f9",
+                }}
+                onClick={() => handleClose("Personal")}
+              >
+                Personal
+              </MenuItem>
+            </Menu>
+            <DatePicker
+              selected={selectedDate}
+              onChange={(date: Date | null) => {
+                if (date) {
+                  filterOnDueDate(date);
+                  setSelectedDate(date);
+                }
+              }}
+              dateFormat="dd MMM, yyyy"
+              placeholderText="Due Date"
+              customInput={
+                <Button
+                  variant="outlined"
+                  color="secondary"
+                  style={{
+                    textTransform: "none",
+                    borderRadius: "2rem",
+                    fontSize: "0.8rem",
+                    color: selectedDate ? "black" : "inherit",
+                    backgroundColor: selectedDate ? "#f0cccc" : "transparent",
+                  }}
+                  endIcon={<KeyboardArrowDownIcon />}
+                >
+                  {selectedDate
+                    ? selectedDate.toLocaleDateString("en-GB", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                      })
+                    : "Due Date"}
+                </Button>
+              }
+            />
+            {(selectedDate || selectedCategory) && (
+              <IconButton
+                sx={{
+                  position: "absolute",
+                  right: "-3rem",
+                  color: "gray",
+                  border: "1px solid",
+                  padding: "0.3rem",
+                }}
+                onClick={() => {
+                  filterOnDueDate(null);
+                  if (selectedCategory) {
+                    setSelectedCategory("");
+                  }
+                }}
+              >
+                <ClearIcon />
+              </IconButton>
+            )}
+          </Box>
+        </Box>
+        <Box
+          sx={{
+            order: { sm: 2, xs: 1 },
+            display: "flex",
+            flexDirection: { sm: "row", xs: "column" },
+            alignItems: { xs: "flex-end", sm: "center" },
+            gap: { xs: "1rem", sm: "0rem" },
+          }}
+        >
           <Button
             variant="contained"
             color="primary"
@@ -519,8 +539,9 @@ const TaskManager: React.FC = () => {
               borderRadius: "3rem",
               px: "2rem",
               ":hover": { backgroundColor: "#7b1984" },
-              order: { xs: 1,sm:2 },
+              order: { xs: 1, sm: 2 },
               width: "fit-content",
+              whiteSpace: "nowrap",
             }}
             onClick={handleClickOpen}
           >
@@ -529,17 +550,17 @@ const TaskManager: React.FC = () => {
         </Box>
       </Box>
       {viewType === "list" && <Divider sx={{ py: "1rem" }}></Divider>}
-      {tasks.length === 0 && (
+      {search && tasks.length === 0 && (
         <Box minHeight={"60vh"} display={"flex"} alignItems={"center"}>
           <NoResultsFound></NoResultsFound>
         </Box>
       )}
-      {tasks.length > 0 && (
+      {(tasks.length > 0 || !search) && (
         <Box>
           {viewType === "list" && (
             <Box
               sx={{
-                display:{sm: "flex",xs:"none"},
+                display: { sm: "flex", xs: "none" },
                 justifyContent: "space-between",
                 alignItems: "center",
                 padding: "10px 16px",
@@ -594,7 +615,6 @@ const TaskManager: React.FC = () => {
                 justifyContent="space-around"
               >
                 {Object.entries(displayTasks).map(([status, taskList]) => {
-                  // console.log("taskList===>", taskList);
                   return (
                     <Droppable key={status} droppableId={status}>
                       {(provided) => (
@@ -616,7 +636,6 @@ const TaskManager: React.FC = () => {
                                 : completedListExpanded
                             }
                             onChange={() => {
-                              console.log(status);
                               handleChange(
                                 status === "todo"
                                   ? setTodoListExpanded
@@ -689,7 +708,11 @@ const TaskManager: React.FC = () => {
                                 }}
                               >
                                 {status.replace(/([A-Z])/g, " $1")} (
-                                {(Array.isArray(taskList) ? taskList : []).length})
+                                {
+                                  (Array.isArray(taskList) ? taskList : [])
+                                    .length
+                                }
+                                )
                               </Typography>
                             </AccordionSummary>
                             <AccordionDetails
@@ -710,7 +733,8 @@ const TaskManager: React.FC = () => {
                                   viewType === "board" ? "60vh" : "fit-content",
                               }}
                             >
-                              {(Array.isArray(taskList) ? taskList : []).length === 0 ? (
+                              {(Array.isArray(taskList) ? taskList : [])
+                                .length === 0 ? (
                                 <Box
                                   sx={{
                                     display: "flex",
@@ -723,331 +747,366 @@ const TaskManager: React.FC = () => {
                                   No Tasks in {status}
                                 </Box>
                               ) : (
-                                (Array.isArray(taskList) ? taskList : []).map((task: Task, index: number) =>{
-                                  console.log("task========>", task);
-
-                                  return (
-                                    <Draggable
-                                      key={task.id}
-                                      draggableId={task.id}
-                                      index={index}
-                                    >
-                                      {(provided) => (
-                                        <Box
-                                          ref={provided.innerRef}
-                                          {...provided.draggableProps}
-                                          {...provided.dragHandleProps}
-                                          sx={{
-                                            border:
-                                              viewType === "board"
-                                                ? "0.5px solid #dddadd"
-                                                : "0px",
-                                            borderBottom:
-                                              index !== (Array.isArray(taskList) ? taskList : []).length - 1 &&
-                                              "0.5px solid #dddadd",
-                                            display: "flex",
-                                            flexDirection: "row", // Stack elements for board view
-                                            justifyContent: "space-between",
-                                            marginBottom:
-                                              viewType === "board"
-                                                ? "1rem"
-                                                : "0rem",
-                                            alignItems:
-                                              viewType === "board"
-                                                ? "flex-start"
-                                                : "center", // Ensure vertical alignment
-                                            fontSize: "0.9rem",
-                                            fontWeight: "500",
-                                            flexWrap: "wrap",
-                                            minHeight:
-                                              viewType === "board" && "100px",
-                                            boxShadow:
-                                              viewType === "board" ? 3 : 0,
-                                            backgroundColor:
-                                              viewType === "board" && "white",
-                                            borderRadius:
-                                              viewType === "board"
-                                                ? "12px"
-                                                : "0px",
-                                            padding:
-                                              viewType === "board"
-                                                ? "0.7rem"
-                                                : "0.3rem",
-                                          }}
-                                          key={task.id}
-                                        >
+                                (Array.isArray(taskList) ? taskList : []).map(
+                                  (task: Task, index: number) => {
+                                    return (
+                                      <Draggable
+                                        key={task.id}
+                                        draggableId={task.id}
+                                        index={index}
+                                      >
+                                        {(provided, snapshot) => (
                                           <Box
+                                            ref={provided.innerRef}
+                                            {...provided.draggableProps}
+                                            {...provided.dragHandleProps}
                                             sx={{
-                                              flex: 2,
-                                              textAlign: "left",
-                                              minWidth:
-                                                viewType === "list"
-                                                  ? "100px"
-                                                  : "50%",
-                                              order: 1,
-                                            }}
-                                          >
-                                            <Box
-                                              sx={{
-                                                display: "flex",
-                                                alignItems: "center",
-                                                width: "100%",
-                                                order: 2,
-                                                fontSize:
-                                                  viewType === "board"
-                                                    ? "1rem"
-                                                    : "",
-                                                fontWeight:
-                                                  viewType === "board"
-                                                    ? 700
-                                                    : "",
-                                                textDecoration:
-                                                  status === "completed"
-                                                    ? "line-through"
-                                                    : "none",
-                                                overflow: "hidden",
-                                                whiteSpace: "nowrap",
-                                                textOverflow: "ellipsis",
-                                              }}
-                                            >
-                                              {viewType === "list" && (
-                                                <>
-                                                  <Checkbox
-                                                    sx={{
-                                                      paddingRight: "0px",
-                                                      paddingLeft: "0px",
-                                                    }}
-                                                    onChange={(e) => {
-                                                      if (e.target.checked) {
-                                                        setSelectedTaskList([
-                                                          ...selectedTaskList,
-                                                          task,
-                                                        ]);
-                                                      } else {
-                                                        const filteredTask = [
-                                                          ...selectedTaskList,
-                                                        ].filter(
-                                                          (selectedTask) =>
-                                                            selectedTask.id !==
-                                                            task.id
-                                                        );
-                                                        setSelectedTaskList(
-                                                          filteredTask
-                                                        );
-                                                      }
-                                                    }}
-                                                  />
-                                                  <DragIndicatorIcon
-                                                    sx={{ color: "#a7a7a7" }}
-                                                  ></DragIndicatorIcon>{" "}
-                                                  <CheckCircleIcon
-                                                    sx={{
-                                                      mr: "0.5rem",
-                                                      color:
-                                                        status === "completed"
-                                                          ? "#1b8d17"
-                                                          : "#a7a7a7",
-                                                    }}
-                                                  ></CheckCircleIcon>
-                                                </>
-                                              )}
-                                              <Box
-                                                sx={{
-                                                  overflow: "hidden",
-                                                  whiteSpace: "nowrap",
-                                                  textOverflow: "ellipsis",
-                                                  flex: 1, // Ensures it takes available space
-                                                }}
-                                              >
-                                                {task.title}
-                                              </Box>
-                                            </Box>
-                                          </Box>
-                                          <Box
-                                            sx={{
-                                              flex: 2,
-                                              display:{xs:"none",sm:"inline"},
-                                              textAlign:
-                                                viewType === "list"
-                                                  ? "left"
-                                                  : "right",
-                                              minWidth:
-                                                viewType === "list"
-                                                  ? "100px"
-                                                  : "50%",
-                                              order:
-                                                viewType === "board" ? 5 : 2,
-                                              alignSelf:
-                                                viewType === "board" &&
-                                                "flex-end",
-                                              color:
+                                              border:
                                                 viewType === "board"
-                                                  ? "secondary.contrastText"
-                                                  : "",
-                                              fontSize:
+                                                  ? "0.5px solid #dddadd"
+                                                  : "0px",
+                                              borderBottom:
+                                                index !==
+                                                  (Array.isArray(taskList)
+                                                    ? taskList
+                                                    : []
+                                                  ).length -
+                                                    1 && "0.5px solid #dddadd",
+                                              display: "flex",
+                                              flexDirection: "row", // Stack elements for board view
+                                              justifyContent: "space-between",
+                                              marginBottom:
                                                 viewType === "board"
-                                                  ? "0.8rem"
-                                                  : "",
+                                                  ? "1rem"
+                                                  : "0rem",
+                                              alignItems:
+                                                viewType === "board"
+                                                  ? "flex-start"
+                                                  : "center", // Ensure vertical alignment
+                                              fontSize: "0.9rem",
+                                              fontWeight: "500",
+                                              flexWrap: "wrap",
+                                              minHeight:
+                                                viewType === "board" && "100px",
+                                              boxShadow:
+                                                viewType === "board"
+                                                  ? 3
+                                                  : snapshot.isDragging
+                                                  ? 3
+                                                  : 0,
+                                              backgroundColor:
+                                                viewType === "board"
+                                                  ? "white"
+                                                  : snapshot.isDragging
+                                                  ? "white"
+                                                  : "inherit",
+                                              borderRadius:
+                                                viewType === "board"
+                                                  ? "12px"
+                                                  : snapshot.isDragging
+                                                  ? "12px"
+                                                  : "0px",
+                                              padding:
+                                                viewType === "board"
+                                                  ? "0.7rem"
+                                                  : "0.3rem",
                                             }}
+                                            key={task.id}
                                           >
-                                            {formatDate(task.dueDate)}
-                                          </Box>
-                                          {viewType === "list" && (
                                             <Box
                                               sx={{
                                                 flex: 2,
                                                 textAlign: "left",
-                                                minWidth: "100px",
-                                                order: 3,
-                                                display:{xs:"none",sm:"inline"},
+                                                minWidth:
+                                                  viewType === "list"
+                                                    ? "100px"
+                                                    : "50%",
+                                                order: 1,
                                               }}
                                             >
-                                              <Button
-                                                color="secondary"
+                                              <Box
                                                 sx={{
-                                                  backgroundColor: "#dddadd",
+                                                  display: "flex",
+                                                  alignItems: "center",
+                                                  width: "100%",
+                                                  order: 2,
+                                                  fontSize:
+                                                    viewType === "board"
+                                                      ? "1rem"
+                                                      : "",
+                                                  fontWeight:
+                                                    viewType === "board"
+                                                      ? 700
+                                                      : "",
+                                                  textDecoration:
+                                                    status === "completed"
+                                                      ? "line-through"
+                                                      : "none",
+                                                  overflow: "hidden",
+                                                  whiteSpace: "nowrap",
+                                                  textOverflow: "ellipsis",
                                                 }}
                                               >
-                                                {task.status
-                                                  .split("_")
-                                                  .join("-")}
-                                              </Button>
+                                                {viewType === "list" && (
+                                                  <>
+                                                    <Checkbox
+                                                      sx={{
+                                                        paddingRight: "0px",
+                                                        paddingLeft: "0px",
+                                                      }}
+                                                      onChange={(e) => {
+                                                        if (e.target.checked) {
+                                                          setSelectedTaskList([
+                                                            ...selectedTaskList,
+                                                            task,
+                                                          ]);
+                                                        } else {
+                                                          const filteredTask = [
+                                                            ...selectedTaskList,
+                                                          ].filter(
+                                                            (selectedTask) =>
+                                                              selectedTask.id !==
+                                                              task.id
+                                                          );
+                                                          setSelectedTaskList(
+                                                            filteredTask
+                                                          );
+                                                        }
+                                                      }}
+                                                    />
+                                                    <DragIndicatorIcon
+                                                      sx={{ color: "#a7a7a7" }}
+                                                    ></DragIndicatorIcon>{" "}
+                                                    <CheckCircleIcon
+                                                      sx={{
+                                                        mr: "0.5rem",
+                                                        color:
+                                                          status === "completed"
+                                                            ? "#1b8d17"
+                                                            : "#a7a7a7",
+                                                      }}
+                                                    ></CheckCircleIcon>
+                                                  </>
+                                                )}
+                                                <Box
+                                                  sx={{
+                                                    overflow: "hidden",
+                                                    whiteSpace: "nowrap",
+                                                    textOverflow: "ellipsis",
+                                                    flex: 1, // Ensures it takes available space
+                                                  }}
+                                                  onClick={() => {
+                                                    if (isMobileDevice) {
+                                                      setCreateTaskModalOpen(
+                                                        true
+                                                      );
+                                                      setActiveTask(task);
+                                                      setActionType("editTask");
+                                                    }
+                                                  }}
+                                                >
+                                                  {task.title}
+                                                </Box>
+                                              </Box>
                                             </Box>
-                                          )}
-
-                                          <Box
-                                            sx={{
-                                              flex: 1,
-                                              textAlign: "left",
-                                              minWidth:
-                                                viewType === "list"
-                                                  ? "100px"
-                                                  : "50%",
-                                              textTransform: "lowercase",
-                                              alignSelf:
-                                                viewType === "board" &&
-                                                "flex-end",
-                                              order: 4,
-                                              color:
-                                                viewType === "board"
-                                                  ? "secondary.contrastText"
-                                                  : "",
-                                              fontSize:
-                                                viewType === "board"
-                                                  ? "0.8rem"
-                                                  : "",
-                                                  display:{xs:"none",sm:"inline"},
-                                            }}
-                                          >
-                                            {task.category}
-                                          </Box>
-                                          <Box
-                                            sx={{
-                                              flex: 1,
-                                              textAlign: "right",
-                                              minWidth:
-                                                viewType === "list"
-                                                  ? "50px"
-                                                  : "50%",
-                                              // alignSelf:viewType==="board" && "flex-end"
-                                              order:
-                                                viewType === "board" ? 3 : 5,
-                                                display:{xs:"none",sm:"inline"},
-                                            }}
-                                          >
-                                            <IconButton
-                                              color="secondary"
-                                              onClick={(e) =>
-                                                onActionsCLick(e, task)
-                                              }
+                                            <Box
                                               sx={{
-                                                fontSize: "0.8rem",
-                                              }}
-                                              style={{
-                                                borderRadius: "2rem",
-                                                textTransform: "capitalize",
+                                                flex: 2,
+                                                display: {
+                                                  xs: "none",
+                                                  sm: "inline",
+                                                },
+                                                textAlign:
+                                                  viewType === "list"
+                                                    ? "left"
+                                                    : "right",
+                                                minWidth:
+                                                  viewType === "list"
+                                                    ? "100px"
+                                                    : "50%",
+                                                order:
+                                                  viewType === "board" ? 5 : 2,
+                                                alignSelf:
+                                                  viewType === "board" &&
+                                                  "flex-end",
+                                                color:
+                                                  viewType === "board"
+                                                    ? "secondary.contrastText"
+                                                    : "",
+                                                fontSize:
+                                                  viewType === "board"
+                                                    ? "0.8rem"
+                                                    : "",
                                               }}
                                             >
-                                              <MoreHorizIcon />
-                                            </IconButton>
+                                              {formatDate(task.dueDate)}
+                                            </Box>
+                                            {viewType === "list" && (
+                                              <Box
+                                                sx={{
+                                                  flex: 2,
+                                                  textAlign: "left",
+                                                  minWidth: "100px",
+                                                  order: 3,
+                                                  display: {
+                                                    xs: "none",
+                                                    sm: "inline",
+                                                  },
+                                                }}
+                                              >
+                                                <Button
+                                                  color="secondary"
+                                                  sx={{
+                                                    backgroundColor: "#dddadd",
+                                                  }}
+                                                >
+                                                  {task.status
+                                                    .split("_")
+                                                    .join("-")}
+                                                </Button>
+                                              </Box>
+                                            )}
 
-                                            <Menu
-                                              anchorEl={actionIconsAnchorEl}
-                                              open={actionOpen}
-                                              onClose={() => {
-                                                onActionsClose("");
-                                              }}
-                                              PaperProps={{
-                                                style: {
-                                                  border:
-                                                    "1px solid rgb(240, 204, 204)",
-                                                  borderRadius: "8px",
-                                                  boxShadow:
-                                                    "0px 4px 10px rgba(0, 0, 0, 0.1)",
-                                                  padding: "0rem",
-                                                  marginTop: "0rem",
-                                                  backgroundColor: "#fff9f9",
+                                            <Box
+                                              sx={{
+                                                flex: 1,
+                                                textAlign: "left",
+                                                minWidth:
+                                                  viewType === "list"
+                                                    ? "100px"
+                                                    : "50%",
+                                                textTransform: "lowercase",
+                                                alignSelf:
+                                                  viewType === "board" &&
+                                                  "flex-end",
+                                                order: 4,
+                                                color:
+                                                  viewType === "board"
+                                                    ? "secondary.contrastText"
+                                                    : "",
+                                                fontSize:
+                                                  viewType === "board"
+                                                    ? "0.8rem"
+                                                    : "",
+                                                display: {
+                                                  xs: "none",
+                                                  sm: "inline",
                                                 },
                                               }}
-                                              anchorOrigin={{
-                                                vertical: "bottom",
-                                                horizontal: "left",
-                                              }}
-                                              transformOrigin={{
-                                                vertical: "top",
-                                                horizontal: "center",
-                                              }}
-                                              key={task.id}
                                             >
-                                              <MenuItem
+                                              {task.category}
+                                            </Box>
+                                            <Box
+                                              sx={{
+                                                flex: 1,
+                                                textAlign: "right",
+                                                minWidth:
+                                                  viewType === "list"
+                                                    ? "50px"
+                                                    : "50%",
+                                                // alignSelf:viewType==="board" && "flex-end"
+                                                order:
+                                                  viewType === "board" ? 3 : 5,
+                                                display: {
+                                                  xs: "none",
+                                                  sm: "inline",
+                                                },
+                                              }}
+                                            >
+                                              <IconButton
+                                                color="secondary"
+                                                onClick={(e) =>
+                                                  onActionsCLick(e, task)
+                                                }
                                                 sx={{
-                                                  fontSize: "0.9rem",
-                                                  padding: "0.3rem",
-                                                  marginBottom: "0.3rem",
-                                                  paddingRight: "3rem",
-                                                  fontWeight: "500",
+                                                  fontSize: "0.8rem",
                                                 }}
-                                                key={"edit"}
-                                                onClick={() => {
-                                                  onActionsClose("edit");
+                                                style={{
+                                                  borderRadius: "2rem",
+                                                  textTransform: "capitalize",
                                                 }}
                                               >
-                                                <BorderColorIcon
+                                                <MoreHorizIcon />
+                                              </IconButton>
+
+                                              <Menu
+                                                anchorEl={actionIconsAnchorEl}
+                                                open={actionOpen}
+                                                onClose={() => {
+                                                  onActionsClose("");
+                                                }}
+                                                PaperProps={{
+                                                  style: {
+                                                    border:
+                                                      "1px solid rgb(240, 204, 204)",
+                                                    borderRadius: "8px",
+                                                    boxShadow:
+                                                      "0px 4px 10px rgba(0, 0, 0, 0.1)",
+                                                    padding: "0rem",
+                                                    marginTop: "0rem",
+                                                    backgroundColor: "#fff9f9",
+                                                  },
+                                                }}
+                                                anchorOrigin={{
+                                                  vertical: "bottom",
+                                                  horizontal: "left",
+                                                }}
+                                                transformOrigin={{
+                                                  vertical: "top",
+                                                  horizontal: "center",
+                                                }}
+                                                key={task.id}
+                                              >
+                                                <MenuItem
                                                   sx={{
-                                                    mr: "0.5rem",
-                                                    fontSize: "1.2rem",
+                                                    fontSize: "0.9rem",
+                                                    padding: "0.3rem",
+                                                    marginBottom: "0.3rem",
+                                                    paddingRight: "3rem",
+                                                    fontWeight: "500",
                                                   }}
-                                                ></BorderColorIcon>{" "}
-                                                Edit
-                                              </MenuItem>
-                                              <MenuItem
-                                                sx={{
-                                                  fontSize: "0.9rem",
-                                                  padding: "0.3rem",
-                                                  paddingRight: "3rem",
-                                                  color: "#da2f2f",
-                                                }}
-                                                key={"delete"}
-                                                onClick={() => {
-                                                  onActionsClose("delete");
-                                                }}
-                                              >
-                                                <DeleteIcon
+                                                  key={"edit"}
+                                                  onClick={() => {
+                                                    onActionsClose("edit");
+                                                  }}
+                                                >
+                                                  <BorderColorIcon
+                                                    sx={{
+                                                      mr: "0.5rem",
+                                                      fontSize: "1.2rem",
+                                                    }}
+                                                  ></BorderColorIcon>{" "}
+                                                  Edit
+                                                </MenuItem>
+                                                <MenuItem
                                                   sx={{
-                                                    mr: "0.5rem",
-                                                    fontSize: "1.2rem",
+                                                    fontSize: "0.9rem",
+                                                    padding: "0.3rem",
+                                                    paddingRight: "3rem",
                                                     color: "#da2f2f",
                                                   }}
-                                                ></DeleteIcon>
-                                                Delete
-                                              </MenuItem>
-                                            </Menu>
+                                                  key={"delete"}
+                                                  onClick={() => {
+                                                    onActionsClose("delete");
+                                                  }}
+                                                >
+                                                  <DeleteIcon
+                                                    sx={{
+                                                      mr: "0.5rem",
+                                                      fontSize: "1.2rem",
+                                                      color: "#da2f2f",
+                                                    }}
+                                                  ></DeleteIcon>
+                                                  Delete
+                                                </MenuItem>
+                                              </Menu>
+                                            </Box>
                                           </Box>
-                                        </Box>
-                                      )}
-                                    </Draggable>
-                                  );
-                                })
+                                        )}
+                                      </Draggable>
+                                    );
+                                  }
+                                )
                               )}
                               {provided.placeholder}
                             </AccordionDetails>

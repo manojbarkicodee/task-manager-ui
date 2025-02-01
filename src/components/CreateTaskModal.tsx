@@ -14,13 +14,13 @@ import { useDispatch } from "react-redux";
 import { AppDispatch } from "../store/store";
 
 const BootstrapDialog = styled(Dialog)(({ theme }) => ({
-  "& .MuiPaper-root": { 
-    borderRadius: "10px", 
+  "& .MuiPaper-root": {
+    borderRadius: "10px",
     maxWidth: "70vw", // Set a default value
-    [theme.breakpoints.down("sm")]: { maxWidth: "100vw" } // Responsive fix
+    [theme.breakpoints.down("sm")]: { maxWidth: "100vw" }, // Responsive fix
   },
-  "& .MuiDialogContent-root": { 
-    padding: "0px" 
+  "& .MuiDialogContent-root": {
+    padding: "0px",
   },
   "& .MuiDialogActions-root": {
     padding: theme.spacing(2),
@@ -28,8 +28,8 @@ const BootstrapDialog = styled(Dialog)(({ theme }) => ({
   },
   "& .MuiDialog-paper": {
     margin: "32px", // Default margin
-    [theme.breakpoints.down("sm")]: { margin: "0px" } // Responsive margin fix
-  }
+    [theme.breakpoints.down("sm")]: { margin: "0px" }, // Responsive margin fix
+  },
 }));
 
 const StyledButton = styled(Button)(({ theme }) => ({
@@ -68,11 +68,12 @@ export default function CreateTaskModal({
   setTaskData: React.Dispatch<React.SetStateAction<Task>>;
 }) {
   const userData = JSON.parse(localStorage.getItem("userData") || "{}");
-
+  const [viewTypeInmobile,setViewTypeInmobile]=React.useState<string>("details");
   const dispatch = useDispatch<AppDispatch>();
   const handleClose = () => {
     clearFormdata();
     setOpen(false);
+    setViewTypeInmobile("details")
   };
 
   const handleChange = (e) => {
@@ -177,12 +178,49 @@ export default function CreateTaskModal({
         </IconButton>
       </DialogTitle>
       <DialogContent
-        sx={{ display: "flex", flexDirection: "row", padding: "0px" }}
+        sx={{
+          display: "flex",
+          flexDirection: { sm: "row", xs: "column" },
+          padding: "0px",
+        }}
       >
+        <Box sx={{ display:{sm: "none", xs: "flex"},padding:"20px" ,justifyContent:"space-between"}}>
+          
+          <StyledButton
+            color="secondary"
+            variant={viewTypeInmobile === "details" ? "contained" : "outlined"}
+            sx={{
+              ":hover": {
+                backgroundColor: viewTypeInmobile === "details" && "#271e1e",
+              },
+              padding:"3px 5rem",
+              fontSize:"0.9rem"
+            }}
+            onClick={()=>{setViewTypeInmobile("details")}}
+          >
+            DETAILS
+          </StyledButton>
+
+          <StyledButton
+            color="secondary"
+            variant={viewTypeInmobile === "activity" ? "contained" : "outlined"}
+            sx={{
+              ":hover": {
+                backgroundColor: viewTypeInmobile === "activity" && "#271e1e",
+              },
+              padding:"3px 2rem",
+              fontSize:"0.9rem"
+            }}
+            onClick={()=>{setViewTypeInmobile("activity")}}
+          >
+            ACTIVITY
+          </StyledButton>
+        </Box>
         <Box
           sx={{
-            width: modalType === "newTask" ? "100%" : "65%",
-            padding: "24px",
+            width:{ sm:modalType === "newTask" ? "100%" : "65%",xs:"100%"},
+            padding: { sm: "24px", xs: "16px" },
+            display:{sm:"inline",xs:viewTypeInmobile==="details"?"inline":"none"}
           }}
         >
           <StyledTextField
@@ -207,7 +245,14 @@ export default function CreateTaskModal({
             placeholder="Description"
           />
 
-          <Box sx={{ display: "flex", gap: "1rem", marginTop: "1rem",flexDirection: {sm:"row",xs:"column"} }}>
+          <Box
+            sx={{
+              display: "flex",
+              gap: "1rem",
+              marginTop: "1rem",
+              flexDirection: { sm: "row", xs: "column" },
+            }}
+          >
             <Box>
               <Typography
                 variant="body2"
@@ -321,8 +366,9 @@ export default function CreateTaskModal({
         {modalType === "editTask" && (
           <Box
             sx={{
-              width: "35%",
+              width: {sm:"35%",xs:"100vw"},
               borderLeft: "1px solid rgba(117, 117, 117, 0.3)",
+              display:{sm:"inline",xs:viewTypeInmobile==="activity"?"inline":"none"}
             }}
           >
             <Typography
@@ -332,6 +378,7 @@ export default function CreateTaskModal({
                 padding: "10px",
                 fontWeight: 500,
                 color: "secondary.contrastText",
+                display:{sm:"inherit",xs:"none"}
               }}
             >
               Activity

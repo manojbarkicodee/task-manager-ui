@@ -87,10 +87,8 @@ export const fetchTasks = createAsyncThunk(
         );
         
        }
-      console.log("Fetched filtered tasks:", tasks);
       return tasks;
     } catch (error) {
-      console.error("Error fetching tasks:", error);
       return [];
     }
   }
@@ -110,7 +108,6 @@ export const addTask = createAsyncThunk(
       message: `Task created with title: "${newTask.title}"`,
       date: now,
     };
-    console.log("newtask==>", newTask);
     const taskRef = await addDoc(tasksCollection, {
       ...newTask,
       createdAt: now,
@@ -223,30 +220,7 @@ const taskSlice = createSlice({
         );
       }
     },
-    filterTasksByCategory: (
-      state,
-      action: PayloadAction<"WORK" | "PERSONAL">
-    ) => {
-      state.tasks = state.tasks.filter(
-        (task) => task.category === action.payload
-      );
-    },
-    searchTasks: (
-      state,
-      action: PayloadAction<{ title?: string; status?: string }>
-    ) => {
-      const { title, status } = action.payload;
-      state.tasks = state.tasks.filter((task) => {
-        const matchesTitle = title
-          ? task.title.toLowerCase().includes(title.toLowerCase())
-          : true;
-        const matchesStatus = status ? task.status === status : true;
-        return matchesTitle && matchesStatus;
-      });
-    },
-    clearFilters: (state) => {
-      state.tasks = [...state.tasks];
-    },
+   
   },
   extraReducers: (builder) => {
     builder
@@ -271,13 +245,11 @@ const taskSlice = createSlice({
       })
       .addCase(addTask.fulfilled, (state, action: PayloadAction<Task>) => {
         state.loading = false;
-        console.log("action.payload", action.payload);
         state.tasks.push(action.payload);
       })
       .addCase(addTask.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message || "Failed to add task";
-        console.log(action.error.message);
       })
 
       // Update a task
@@ -319,9 +291,6 @@ const taskSlice = createSlice({
 });
 
 export const {
-  filterTasksByCategory,
-  searchTasks,
-  clearFilters,
   filterTasksByStatus,
 } = taskSlice.actions;
 export default taskSlice.reducer;

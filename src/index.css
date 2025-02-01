@@ -32,6 +32,12 @@ body {
   min-height: 100vh;
   background-color: #ffffff;
 }
+
+@media (max-width: 600px) {
+  body {
+    padding: 0; /* Remove padding on mobile */
+  }
+}
 /*
 h1 {
   font-size: 3.2em;

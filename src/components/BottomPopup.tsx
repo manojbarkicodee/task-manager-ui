@@ -5,10 +5,8 @@ import {
   Chip,
   Menu,
   MenuItem,
-  IconButton,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import DeleteIcon from "@mui/icons-material/Delete";
 import { deleteTask, Task, updateTask } from "../store/taskSlice";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../store/store";
@@ -121,7 +119,7 @@ const handleMenuClose = (status?: "" | "TO_DO" | "IN_PROGRESS" | "COMPLETED") =>
         </MenuItem>
       </Menu>
 
-      <IconButton
+      <Button
         sx={{
           backgroundColor: "#8B0000",
           color: "#fff",
@@ -129,8 +127,9 @@ const handleMenuClose = (status?: "" | "TO_DO" | "IN_PROGRESS" | "COMPLETED") =>
         }}
         onClick={() => onSelectedAction("delete")}
       >
-        <DeleteIcon />
-      </IconButton>
+        {/* <DeleteIcon /> */}
+        DELETE
+      </Button>
     </Box>
   );
 };
