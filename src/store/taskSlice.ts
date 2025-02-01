@@ -285,7 +285,7 @@ const taskSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(updateTask.fulfilled, (state, action: PayloadAction<Task>) => {
+      .addCase(updateTask.fulfilled, (state, action: PayloadAction<{ id: string } & Partial<Task>>) => {
         state.loading = false;
         const taskIndex = state.tasks.findIndex(
           (task) => task.id === action.payload.id

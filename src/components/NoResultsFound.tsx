@@ -1,4 +1,3 @@
-import React from "react";
 import { Box, Typography } from "@mui/material";
 import SearchOffIcon from "@mui/icons-material/SearchOff"; // No results icon
 

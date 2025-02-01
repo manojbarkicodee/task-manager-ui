@@ -1,9 +1,6 @@
-import React, { act, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
-  AppBar,
-  Toolbar,
   Typography,
-  Grid,
   Avatar,
   Box,
   Button,
@@ -12,7 +9,6 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
-  Paper,
   Checkbox,
   IconButton,
   TextField,
@@ -35,7 +31,6 @@ import {
   deleteTask,
   fetchTasks,
   filterTasksByStatus,
-  searchTasks,
   Task,
   updateTask,
 } from "../store/taskSlice";
@@ -65,7 +60,8 @@ const TaskManager: React.FC = () => {
   const [createTaskModalOpen, setCreateTaskModalOpen] = React.useState(false);
   const userData = JSON.parse(localStorage.getItem("userData") || "{}");
   const [selectedCategory, setSelectedCategory] = useState(""); // Track selected category
-  const [selectedDate, setSelectedDate] = useState(null);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+
   const [activeTask, setActiveTask] = useState<Task>({
     title: "",
     description: "",
@@ -76,9 +72,9 @@ const TaskManager: React.FC = () => {
   const [actionType, setActionType] = useState("");
   const [search, setSearch] = useState("");
   const [displayTasks, setDisplaytasks] = useState<any>({
-    todo: todoList,
-    progress: progressList,
-    completed: completedList,
+    todo: todoList||[],
+    progress: progressList||[],
+    completed: completedList||[],
   });
   const handleClickOpen = () => {
     setCreateTaskModalOpen(true);
@@ -335,7 +331,7 @@ const TaskManager: React.FC = () => {
           display: "flex",
           justifyContent: "space-between",
           flexDirection: { sm: "row", xs: "column" },
-          gap: { xs: "1rem" },
+          gap: { xs: "1rem",sm:"0rem" },
         }}
       >
         <Box
@@ -412,10 +408,12 @@ const TaskManager: React.FC = () => {
           </Menu>
           <DatePicker
             selected={selectedDate}
-            onChange={(date) => {
-              console.log(date);
-
-              filterOnDueDate(date);
+            onChange={(date: Date | null) => {
+              if (date) {
+                console.log(date);
+                filterOnDueDate(date);
+                setSelectedDate(date);
+              }
             }}
             dateFormat="dd MMM, yyyy"
             placeholderText="Due Date"
@@ -467,8 +465,8 @@ const TaskManager: React.FC = () => {
             order: { sm: 2, xs: 1 },
             display: "flex",
             flexDirection: { sm: "row", xs: "column" },
-            alignItems: { xs: "flex-end" },
-            gap: { xs: "1rem" },
+            alignItems: { xs: "flex-end",sm:"center" },
+            gap: { xs: "1rem",sm:"0rem" },
           }}
         >
           <TextField
@@ -496,7 +494,7 @@ const TaskManager: React.FC = () => {
               "& .MuiInputBase-input": {
                 padding: "6px 10px",
               },
-              order: { xs: 2 },
+              order: { xs: 2,sm:1 },
             }}
             InputProps={{
               startAdornment: (
@@ -521,7 +519,7 @@ const TaskManager: React.FC = () => {
               borderRadius: "3rem",
               px: "2rem",
               ":hover": { backgroundColor: "#7b1984" },
-              order: { xs: 1 },
+              order: { xs: 1,sm:2 },
               width: "fit-content",
             }}
             onClick={handleClickOpen}
@@ -541,7 +539,7 @@ const TaskManager: React.FC = () => {
           {viewType === "list" && (
             <Box
               sx={{
-                display:{sm: "flex",xs:"none"},
+                display:{sm: "inline",xs:"none"},
                 justifyContent: "space-between",
                 alignItems: "center",
                 padding: "10px 16px",
@@ -691,7 +689,7 @@ const TaskManager: React.FC = () => {
                                 }}
                               >
                                 {status.replace(/([A-Z])/g, " $1")} (
-                                {taskList.length})
+                                {(Array.isArray(taskList) ? taskList : []).length})
                               </Typography>
                             </AccordionSummary>
                             <AccordionDetails
@@ -712,7 +710,7 @@ const TaskManager: React.FC = () => {
                                   viewType === "board" ? "60vh" : "fit-content",
                               }}
                             >
-                              {taskList.length === 0 ? (
+                              {(Array.isArray(taskList) ? taskList : []).length === 0 ? (
                                 <Box
                                   sx={{
                                     display: "flex",
@@ -725,7 +723,7 @@ const TaskManager: React.FC = () => {
                                   No Tasks in {status}
                                 </Box>
                               ) : (
-                                taskList.map((task: Task, index: number) => {
+                                (Array.isArray(taskList) ? taskList : []).map((task: Task, index: number) =>{
                                   console.log("task========>", task);
 
                                   return (
@@ -745,7 +743,7 @@ const TaskManager: React.FC = () => {
                                                 ? "0.5px solid #dddadd"
                                                 : "0px",
                                             borderBottom:
-                                              index !== taskList.length - 1 &&
+                                              index !== (Array.isArray(taskList) ? taskList : []).length - 1 &&
                                               "0.5px solid #dddadd",
                                             display: "flex",
                                             flexDirection: "row", // Stack elements for board view
@@ -868,7 +866,7 @@ const TaskManager: React.FC = () => {
                                           <Box
                                             sx={{
                                               flex: 2,
-                                              display:{xs:"none",sm:"flex"},
+                                              display:{xs:"none",sm:"inline"},
                                               textAlign:
                                                 viewType === "list"
                                                   ? "left"
@@ -901,7 +899,7 @@ const TaskManager: React.FC = () => {
                                                 textAlign: "left",
                                                 minWidth: "100px",
                                                 order: 3,
-                                                display:{xs:"none",sm:"flex"},
+                                                display:{xs:"none",sm:"inline"},
                                               }}
                                             >
                                               <Button
@@ -938,7 +936,7 @@ const TaskManager: React.FC = () => {
                                                 viewType === "board"
                                                   ? "0.8rem"
                                                   : "",
-                                                  display:{xs:"none",sm:"flex"},
+                                                  display:{xs:"none",sm:"inline"},
                                             }}
                                           >
                                             {task.category}
@@ -954,7 +952,7 @@ const TaskManager: React.FC = () => {
                                               // alignSelf:viewType==="board" && "flex-end"
                                               order:
                                                 viewType === "board" ? 3 : 5,
-                                                display:{xs:"none",sm:"flex"},
+                                                display:{xs:"none",sm:"inline"},
                                             }}
                                           >
                                             <IconButton

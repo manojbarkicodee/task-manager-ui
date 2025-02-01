@@ -28,18 +28,20 @@ const BottomPopup = ({
     setAnchorEl(event.currentTarget);
   };
 
-  const onSelectedAction = (actionType: string, status?: string) => {
+  const onSelectedAction = (
+    actionType: "delete" | "update",
+    status?: "" | "TO_DO" | "IN_PROGRESS" | "COMPLETED"
+  ) => {
     if (actionType === "delete") {
       for (const task of selectedTaskList) {
         dispatch(deleteTask({ taskId: task.id || "", userId: userData.uid }));
       }
-    } else if (actionType === "update") {
-      console.log("actionType", actionType, selectedStatus);
+    } else if (actionType === "update" && status) {
       for (const task of selectedTaskList) {
         dispatch(
           updateTask({
             id: task.id || "",
-            updates: { status: status || "TO_DO" },
+            updates: { status }, // ✅ Now correctly typed
             userId: userData.uid,
           })
         );
@@ -47,14 +49,15 @@ const BottomPopup = ({
     }
     setSelectedTaskList([]);
   };
+  
+const handleMenuClose = (status?: "" | "TO_DO" | "IN_PROGRESS" | "COMPLETED") => {
+  if (status) {
+    setSelectedStatus(status);
+    onSelectedAction("update", status);
+  }
+  setAnchorEl(null);
+};
 
-  const handleMenuClose = (status?: string) => {
-    if (status) {
-      setSelectedStatus(status);
-      onSelectedAction("update", status);
-    }
-    setAnchorEl(null);
-  };
   return (
     <Box
       sx={{

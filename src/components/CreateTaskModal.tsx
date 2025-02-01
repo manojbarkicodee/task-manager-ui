@@ -39,7 +39,7 @@ const StyledButton = styled(Button)(({ theme }) => ({
   padding: "0.5rem 1rem",
 }));
 
-const StyledTextField = styled(TextField)(({ theme }) => ({
+const StyledTextField = styled(TextField)(() => ({
   "& .MuiOutlinedInput-root": {
     borderRadius: "10px",
     backgroundColor: "#f1f1f1",
