@@ -1,50 +1,132 @@
-# React + TypeScript + Vite
+# Task Manager
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Overview
 
-Currently, two official plugins are available:
+Task Manager is a web application that allows users to manage their tasks efficiently. It includes user authentication, task categorization, drag-and-drop functionality, file attachments, and an activity log. Users can view tasks in board or list views and perform batch actions for better productivity.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Features
 
-## Expanding the ESLint configuration
+### 1. User Authentication
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+* Implemented using **Firebase Authentication** with  **Google Sign-In** .
+* Users can manage their profiles securely.
 
-- Configure the top-level `parserOptions` property like this:
+### 2. Task Management
 
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+* Create, edit, and delete tasks.
+* Categorize tasks (e.g., work, personal) and add tags for better organization.
+* Set due dates for tasks.
+* Drag-and-drop functionality for rearranging tasks.
+* Sort tasks based on due dates (ascending/descending).
+
+### 3. Batch Actions
+
+* Perform bulk actions on tasks (e.g., delete multiple tasks, mark multiple tasks as complete).
+
+### 4. Task History and Activity Log
+
+* Tracks all changes made to tasks (creation, edits, deletions).
+* Displays an **activity log** for each task.
+
+### 5. Filter Options
+
+* Filtering by tags, category, and date range.
+* Search functionality by task title.
+
+### 6. Board/List View
+
+* Users can switch between a **Kanban board view** and a **list view** for their tasks.
+
+### 7. Responsive Design
+
+* Fully responsive, adapting to mobile, tablet, and desktop screens.
+* Mobile-first design approach for a seamless experience on all devices.
+
+## **Technical Stack**
+
+```plaintext
+- Frontend: React with TypeScript
+- Backend: Firebase Firestore for data storage
+- Authentication: Firebase Authentication (Google Sign-In)
+- State Management: React Query (or similar library)
+- UI Framework: Material-UI (MUI)
+- Deployment: Vercel (or Netlify/Firebase Hosting)
 ```
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
+## **Installation & Setup**
 
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
+### **Prerequisites**
 
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
+Ensure you have the following installed:
+
+```plaintext
+- Node.js (>= 18.x)
+- npm
+- Firebase account with Firestore enabled
 ```
+
+### **Steps to Run Locally**
+
+1. **Clone the repository:**
+
+   ```sh
+   git clone https://github.com/your-username/task-manager.git
+   cd task-manager
+   ```
+2. **Install dependencies:**
+
+   ```sh
+   npm install  # or yarn install
+   ```
+3. **Set up Firebase:**
+
+   * Create a `.env` file and add your Firebase config:
+
+   ```env
+   REACT_APP_FIREBASE_API_KEY=your_api_key
+   REACT_APP_FIREBASE_AUTH_DOMAIN=your_auth_domain
+   REACT_APP_FIREBASE_PROJECT_ID=your_project_id
+   REACT_APP_FIREBASE_STORAGE_BUCKET=your_storage_bucket
+   REACT_APP_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
+   REACT_APP_FIREBASE_APP_ID=your_app_id
+   ```
+4. **Start the development server:**
+
+   ```sh
+   npm run dev  # or yarn dev
+   ```
+
+   The app will be available at `http://localhost:3000`.
+
+## **Deployment**
+
+The application is deployed using  **Vercel** . You can access it at:
+
+🔗 **Live Demo:** [https://task-manager-ui.vercel.app](https://task-manager-ui.vercel.app/)
+
+## **Challenges Faced & Solutions**
+
+```plaintext
+1. Handling Firebase Authentication Redirects:
+   - Issue: Firebase authentication required domain authorization.
+   - Solution: Added the deployed domain to Firebase Authentication settings.
+
+2. Persisting User Authentication State:
+   - Solution: Used `onAuthStateChanged` from Firebase to maintain session persistence.
+
+3. Drag-and-Drop on Mobile:
+   - Issue: Mobile users needed click events instead of drag.
+   - Solution: Disabled drag using `useMediaQuery` and added `onClick` handlers for mobile devices.
+
+4. Routing Issues in Vercel Deployment:
+   - Issue: Page refresh resulted in a "Not Found" error.
+   - Solution: Configured Vercel’s `vercel.json` file for proper route handling.
+```
+
+## **Contributing**
+
+Contributions are welcome! Please fork the repository and create a pull request with your improvements.
+
+## **License**
+
+This project is licensed under the MIT License.
