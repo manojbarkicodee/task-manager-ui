@@ -539,7 +539,7 @@ const TaskManager: React.FC = () => {
           {viewType === "list" && (
             <Box
               sx={{
-                display:{sm: "inline",xs:"none"},
+                display:{sm: "flex",xs:"none"},
                 justifyContent: "space-between",
                 alignItems: "center",
                 padding: "10px 16px",

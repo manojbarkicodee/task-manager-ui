@@ -1,7 +1,12 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import history from 'vite-plugin-history'
 
-// https://vite.dev/config/
+// https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), history()],
+  base: '/', // Ensure correct base path
+  server: {
+    open: true, // Optional: open browser after server is started
+  },
 })
