@@ -42,11 +42,13 @@ const Login: React.FC = () => {
       container
       sx={{
         maxHeight: "95vh",
+        height:{sm:"inherit",xs:"95vh"},
         backgroundColor: "#f9f6f6",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         padding: 2,
+        position:"relative"
       }}
     >
       <Grid
@@ -59,6 +61,7 @@ const Login: React.FC = () => {
           justifyContent: "center",
           alignItems: "flex-start",
           padding: { sm: 4, xs: 0 },
+          height:"100%"
         }}
       >
         <Typography
@@ -68,7 +71,7 @@ const Login: React.FC = () => {
             color: "#7f2087",
             marginBottom: 1,
             textAlign: { xs: "center" },
-            margin: { xs: "auto",sm:"inherit" },
+            margin: { xs: "0px auto",sm:"inherit" },
           }}
         >
           TaskBuddy
@@ -89,7 +92,7 @@ const Login: React.FC = () => {
             "&:hover": {
               backgroundColor: "#333",
             },
-            margin:{xs:"auto",sm:"inherit"}
+            margin:{xs:"0px auto",sm:"inherit"}
           }}
           onClick={handleGoogleLogin}
         >
@@ -144,7 +147,6 @@ const Login: React.FC = () => {
                 borderRadius: "10px",
                 marginBottom: 10,
                 objectFit: "cover",
-                // height: "100%",
               }}
             />
           </CardContent>
@@ -155,8 +157,6 @@ const Login: React.FC = () => {
 };
 
 export default Login;
-
-
 
 
 
@@ -173,9 +173,9 @@ const BackgroundCircles: React.FC = () => {
       }}
     >
       {[
-        { top: "19px", right:"-125px" },
-        { top:"50%"},
-        { bottom: "-20px", left: "50%" },
+       { top: "19px", right:"-125px" },
+               { top:"50%"},
+               { bottom: "-20px", left: "50%" },
       ].map((pos, index) => (
         <Box
           key={index}
@@ -183,11 +183,13 @@ const BackgroundCircles: React.FC = () => {
             position: "absolute",
             width: 150,
             height: 150,
+            borderRadius: "50%",
+            border: "2px solid rgba(127, 32, 135, 0.4)", 
             ...pos,
             transform: "translate(-50%, -50%)",
           }}
         >
-          {[60, 80, 100].map((size, i) => (
+          {[25, 50, 75].map((size, i) => (
             <Box
               key={i}
               sx={{
@@ -208,4 +210,3 @@ const BackgroundCircles: React.FC = () => {
   );
 };
 
-// export default BackgroundCircles;

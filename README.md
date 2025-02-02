@@ -70,8 +70,8 @@ Ensure you have the following installed:
 1. **Clone the repository:**
 
    ```sh
-   git clone https://github.com/your-username/task-manager.git
-   cd task-manager
+   git clone https://github.com/manojbarkicodee/task-manager-ui
+   cd task-manager-ui
    ```
 2. **Install dependencies:**
 
@@ -96,13 +96,13 @@ Ensure you have the following installed:
    npm run dev  # or yarn dev
    ```
 
-   The app will be available at `http://localhost:3000`.
+   The app will be available at `http://localhost:5173`.
 
 ## **Deployment**
 
 The application is deployed using  **Vercel** . You can access it at:
 
-🔗 **Live Demo:** [https://task-manager-ui.vercel.app](https://task-manager-ui.vercel.app/)
+🔗 **Live Demo:** https://task-manager-ui-rho.vercel.app
 
 ## **Challenges Faced & Solutions**
 

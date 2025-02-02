@@ -17,6 +17,8 @@ import {
 } from "@mui/material";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp';
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 
 import "react-datepicker/dist/react-datepicker.css";
@@ -32,6 +34,7 @@ import {
   deleteTask,
   fetchTasks,
   filterTasksByStatus,
+  sortTasksByDueDate,
   Task,
   updateTask,
 } from "../store/taskSlice";
@@ -50,6 +53,7 @@ import NoResultsFound from "../components/NoResultsFound";
 import BottomPopup from "../components/BottomPopup";
 const TaskManager: React.FC = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [actionIconsAnchorEl, setActionIconsAnchorEl] =
     useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -83,6 +87,13 @@ const TaskManager: React.FC = () => {
     setCreateTaskModalOpen(true);
     setActionType("newTask");
   };
+
+  const handleSort = (order: "asc" | "desc") => {
+    setSortOrder(order);
+    dispatch(sortTasksByDueDate(order));
+  };
+
+
   useEffect(() => {
     dispatch(fetchTasks({ userId: userData.uid }));
   }, [dispatch]);
@@ -578,13 +589,31 @@ const TaskManager: React.FC = () => {
                 Task name
               </Box>
               <Box
-                sx={{
-                  flex: 1,
-                  textAlign: "left",
-                  minWidth: "100px",
-                }}
+             sx={{
+              display: "flex",
+              alignItems: "center",
+              flex: 1,
+              textAlign: "left",
+              minWidth: "100px",
+            }}
               >
-                Due on
+            <span>Due on</span>
+      <Box sx={{ display: "flex", flexDirection: "column", ml: 0.5 }}>
+        <IconButton
+          size="small"
+          onClick={() => handleSort("asc")}
+          sx={{ color: sortOrder === "asc" ? "black" : "gray",padding:"0px" }}
+        >
+          <ArrowDropUpIcon fontSize="inherit" />
+        </IconButton>
+        <IconButton
+          size="small"
+          onClick={() => handleSort("desc")}
+          sx={{ color: sortOrder === "desc" ? "black" : "gray",padding:"0px"}}
+        >
+          <ArrowDropDownIcon fontSize="inherit" />
+        </IconButton>
+      </Box>
               </Box>
               <Box
                 sx={{

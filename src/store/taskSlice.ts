@@ -220,7 +220,15 @@ const taskSlice = createSlice({
         );
       }
     },
-   
+    sortTasksByDueDate: (state, action: PayloadAction<"asc" | "desc">) => {
+      const sortOrder = action.payload;
+
+      state.tasks.sort((a, b) => {
+        const dateA = new Date(a.dueDate).getTime();
+        const dateB = new Date(b.dueDate).getTime();
+        return sortOrder === "asc" ? dateA - dateB : dateB - dateA;
+      });
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -292,5 +300,6 @@ const taskSlice = createSlice({
 
 export const {
   filterTasksByStatus,
+  sortTasksByDueDate
 } = taskSlice.actions;
 export default taskSlice.reducer;
